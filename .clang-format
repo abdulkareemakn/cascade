@@ -1,0 +1,11 @@
+BasedOnStyle: Google
+Language: Cpp
+Standard: Cpp23
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+SpaceBeforePointer: True
+
+IncludeGroups: Regroup

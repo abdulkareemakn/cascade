@@ -1,0 +1,45 @@
+# ---------------------
+# CMake Build Artifacts
+# ---------------------
+# CMake's build directory (as specified in your scripts: -B build)
+/build/
+
+# Generated compile_commands.json (even though you symlinked it, keep the original ignored)
+# The symlink itself is not committed, but the file is!
+compile_commands.json
+
+# CMake cache files and generated makefiles
+CMakeCache.txt
+CMakeFiles/
+Makefile
+install_manifest.txt
+CTestTestfile.cmake
+
+# ---------------------
+# Binaries and Libraries
+# ---------------------
+# Executables (your 'cascade' binary)
+.cache/
+*.exe
+*.out
+*.app
+/cascade
+cascade.db
+
+# Shared/Static libraries
+*.so
+*.dll
+*.dylib
+*.a
+
+# ---------------------
+# IDE/Editor Files
+# ---------------------
+# Neovim swap, backup, and undo files
+*.swp
+*.bak
+*.swo
+*.un~
+
+# VS Code / Visual Studio
+.vscode/
