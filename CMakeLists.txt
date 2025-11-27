@@ -19,6 +19,7 @@ set(CASCADE_SOURCES
     src/main.cpp
     src/database.cpp
     src/security.cpp
+    src/repository.cpp
 )
 
 # --- 1. Define the 'sqlite_orm' library target ---
