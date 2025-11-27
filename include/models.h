@@ -13,11 +13,11 @@ struct User {
 };
 
 struct Task {
-    int id;
+    int id = 0;
     std::string title;
     int priority;
     std::time_t dueDate;
-    std::time_t creationTime;
+    std::time_t creationTime = std::time(nullptr);
     int ownerId;
     std::string assignedToUsername;
 };
