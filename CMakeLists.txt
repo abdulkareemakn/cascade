@@ -13,33 +13,57 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_compile_options(-stdlib=libc++ -Wall -Wextra -Wpedantic)
 add_link_options(-stdlib=libc++)
 
+# --- Define Project Sources Explicitly (Recommended) ---
+# Add all your .cpp files here. This is safer than using GLOB.
+set(CASCADE_SOURCES
+    src/main.cpp
+    src/database.cpp
+    # Add any new source files here, e.g., src/user_manager.cpp
+)
+
 # --- 1. Define the 'sqlite_orm' library target ---
-# INTERFACE means: "I have no source files, just headers/settings to pass on"
 add_library(sqlite_orm INTERFACE)
 
-# Tell CMake where to find headers for anyone who uses this library
+# Define where to find the header for sqlite_orm
 target_include_directories(sqlite_orm INTERFACE ${PROJECT_SOURCE_DIR}/lib)
 
-# --- 2. Handle Dependencies ---
-# sqlite_orm *needs* SQLite3. We link SQLite3 to the *library*, not the app.
-# This is "Transitive Dependency": App -> sqlite_orm -> SQLite3
+# --- 2. Handle External Dependencies ---
 find_package(SQLite3 REQUIRED)
-target_link_libraries(sqlite_orm INTERFACE SQLite::SQLite3)
+target_link_libraries(sqlite_orm INTERFACE SQLite::SQLite3) # sqlite_orm needs SQLite3
 
 find_package(OpenSSL)
 
+# --- 2.1 FetchContent Argon2 (Portable Security) ---
+include(FetchContent)
+
+FetchContent_Declare(
+  argon2
+  GIT_REPOSITORY https://github.com/P-H-C/phc-winner-argon2
+  GIT_TAG        20190702
+)
+
+# Disable tests/benchmarks for faster build
+set(ARGON2_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+
+FetchContent_MakeAvailable(argon2)
+
 # --- 3. Build the Main Executable ---
-file(GLOB SOURCES "src/*.cpp")
-add_executable(cascade ${SOURCES})
+add_executable(cascade ${CASCADE_SOURCES})
 
 # Include local headers (non-library)
+# Define the absolute path to the database file
+set(DATABASE_ABSOLUTE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/db/cascade.db")
+
+# Pass the database path to the source code as a preprocessor definition
+target_compile_definitions(cascade PRIVATE "-DDATABASE_FILE=\"${DATABASE_ABSOLUTE_PATH}\"")
+
 target_include_directories(cascade PRIVATE ${PROJECT_SOURCE_DIR}/include)
 
 # --- 4. Link Everything ---
-# We only link 'sqlite_orm'. Because of the step above, 
-# this AUTOMATICALLY links SQLite::SQLite3 as well!
+# Link sqlite_orm (which transitively brings in SQLite3)
 target_link_libraries(cascade PRIVATE 
     sqlite_orm 
+    argon2  # Link the fetched library
     pthread 
     dl 
     c++abi
