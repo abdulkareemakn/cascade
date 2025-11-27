@@ -18,7 +18,7 @@ add_link_options(-stdlib=libc++)
 set(CASCADE_SOURCES
     src/main.cpp
     src/database.cpp
-    # Add any new source files here, e.g., src/user_manager.cpp
+    src/security.cpp
 )
 
 # --- 1. Define the 'sqlite_orm' library target ---
