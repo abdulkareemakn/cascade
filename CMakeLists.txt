@@ -22,31 +22,35 @@ set(CASCADE_SOURCES
     src/repository.cpp
 )
 
-# --- 1. Define the 'sqlite_orm' library target ---
-add_library(sqlite_orm INTERFACE)
-
-# Define where to find the header for sqlite_orm
-target_include_directories(sqlite_orm INTERFACE ${PROJECT_SOURCE_DIR}/lib)
-
-# --- 2. Handle External Dependencies ---
+# --- 1. Handle External Dependencies ---
 find_package(SQLite3 REQUIRED)
-target_link_libraries(sqlite_orm INTERFACE SQLite::SQLite3) # sqlite_orm needs SQLite3
-
 find_package(OpenSSL)
 
-# --- 2.1 FetchContent Argon2 (Portable Security) ---
+# --- 2. FetchContent for Dependencies ---
 include(FetchContent)
 
+# Argon2
 FetchContent_Declare(
   argon2
   GIT_REPOSITORY https://github.com/P-H-C/phc-winner-argon2
   GIT_TAG        20190702
 )
 
-# Disable tests/benchmarks for faster build
 set(ARGON2_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(argon2)
+
+# SQLiteCpp
+FetchContent_Declare(
+  SQLiteCpp
+  GIT_REPOSITORY https://github.com/SRombauts/SQLiteCpp
+  GIT_TAG        3.3.1
+)
+
+set(SQLITECPP_RUN_CPPLINT OFF CACHE BOOL "" FORCE)
+set(SQLITECPP_RUN_CPPCHECK OFF CACHE BOOL "" FORCE)
+
+FetchContent_MakeAvailable(SQLiteCpp)
 
 # --- 3. Build the Main Executable ---
 add_executable(cascade ${CASCADE_SOURCES})
@@ -61,10 +65,10 @@ target_compile_definitions(cascade PRIVATE "-DDATABASE_FILE=\"${DATABASE_ABSOLUT
 target_include_directories(cascade PRIVATE ${PROJECT_SOURCE_DIR}/include)
 
 # --- 4. Link Everything ---
-# Link sqlite_orm (which transitively brings in SQLite3)
 target_link_libraries(cascade PRIVATE 
-    sqlite_orm 
-    argon2  # Link the fetched library
+    SQLiteCpp
+    SQLite::SQLite3
+    argon2
     pthread 
     dl 
     c++abi
