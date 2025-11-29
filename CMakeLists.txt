@@ -19,7 +19,7 @@ set(CASCADE_SOURCES
     src/main.cpp
     src/database.cpp
     src/security.cpp
-    src/repository.cpp
+    src/PriorityQueue.cpp
 )
 
 # --- 1. Handle External Dependencies ---
