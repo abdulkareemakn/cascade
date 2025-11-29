@@ -26,6 +26,17 @@ struct Task {
 struct Team {
     int id = 0;
     std::string name;
-    std::string creatorUsername;
+    int creatorId;
     std::time_t creationTime = std::time(nullptr);
+};
+
+struct TeamMember {
+    int userId;
+    int teamId;
+    std::string role;  // e.g., "admin", "member"
+};
+
+struct TaskDependency {
+    int taskId;
+    int dependsOnTaskId;
 };
