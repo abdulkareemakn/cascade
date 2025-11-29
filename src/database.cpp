@@ -25,8 +25,10 @@ void db::initDatabase() {
         "CREATE TABLE IF NOT EXISTS tasks (id INTEGER NOT NULL PRIMARY KEY "
         "AUTOINCREMENT, "
         "title TEXT NOT NULL, priority INTEGER, status INTEGER NOT NULL, "
-        "dueDate INTEGER, ownerId INTEGER NOT NULL, creationTime INTEGER NOT "
-        "NULL, FOREIGN KEY (ownerId) REFERENCES users(id) ON DELETE CASCADE);");
+        "dueDate INTEGER, creationTime INTEGER NOT NULL, ownerId INTEGER NOT "
+        "NULL, "
+        "assignedToUsername TEXT, "
+        "FOREIGN KEY (ownerId) REFERENCES users(id) ON DELETE CASCADE);");
 
     db.exec(
         "CREATE TABLE IF NOT EXISTS teams (id INTEGER NOT NULL PRIMARY KEY "
@@ -48,7 +50,6 @@ SQLite::Database& db::getConnection() {
 }
 
 bool db::createUser(const std::string& username, const std::string& email,
-
                     const std::string& password) {
     auto& db = db::getConnection();
 
@@ -237,9 +238,201 @@ bool db::updateUsername(int userId, const std::string& newUsername) {
     }
 }
 
-bool db::createTask(const std::string& title, int priority, std::time_t dueDate,
-                    int ownerId);
-std::optional<Task> db::getTask(int id);
-std::vector<Task> db::getTasksByUser(int userId);
-bool db::updateTask(int id /* fields to update */);
-bool db::deleteTask(int id);
+bool db::createTask(const std::string& title, int priority, int status,
+                    std::time_t dueDate, int ownerId,
+                    const std::string& assignedToUsername) {
+    auto& db = db::getConnection();
+
+    try {
+        SQLite::Statement insert(db,
+                                 "INSERT INTO tasks (title, priority, status, "
+                                 "dueDate, creationTime, "
+                                 "ownerId, assignedToUsername) VALUES (?, ?, "
+                                 "?, ?, unixepoch(), ?, ?)");
+
+        insert.bind(1, title);
+        insert.bind(2, priority);
+        insert.bind(3, status);
+        insert.bind(4, static_cast<int64_t>(dueDate));
+        insert.bind(5, ownerId);
+        insert.bind(6, assignedToUsername);
+
+        insert.exec();
+    } catch (const std::exception& e) {
+        std::println("{}\n", e.what());
+        return false;
+    }
+    return true;
+}
+
+std::optional<Task> db::getTask(int id) {
+    auto& db = db::getConnection();
+
+    try {
+        SQLite::Statement select(db, "SELECT * FROM tasks WHERE id = ?");
+        select.bind(1, id);
+
+        if (select.executeStep()) {
+            Task task;
+            task.id = select.getColumn(0).getInt();
+            task.title = select.getColumn(1).getString();
+            task.priority = select.getColumn(2).getInt();
+            task.status = select.getColumn(3).getInt();
+            task.dueDate = select.getColumn(4).getInt64();
+            task.creationTime = select.getColumn(5).getInt64();
+            task.ownerId = select.getColumn(6).getInt();
+            task.assignedToUsername = select.getColumn(7).getString();
+            return task;
+        }
+        return std::nullopt;
+    } catch (const std::exception& e) {
+        std::println("{}\n", e.what());
+        return std::nullopt;
+    }
+}
+
+std::vector<Task> db::getTasksByUser(int userId) {
+    auto& db = db::getConnection();
+    std::vector<Task> tasks;
+
+    try {
+        SQLite::Statement select(db, "SELECT * FROM tasks WHERE ownerId = ?");
+        select.bind(1, userId);
+
+        while (select.executeStep()) {
+            Task task;
+            task.id = select.getColumn(0).getInt();
+            task.title = select.getColumn(1).getString();
+            task.priority = select.getColumn(2).getInt();
+            task.status = select.getColumn(3).getInt();
+            task.dueDate = select.getColumn(4).getInt64();
+            task.creationTime = select.getColumn(5).getInt64();
+            task.ownerId = select.getColumn(6).getInt();
+            task.assignedToUsername = select.getColumn(7).getString();
+            tasks.push_back(task);
+        }
+    } catch (const std::exception& e) {
+        std::println("{}\n", e.what());
+    }
+    return tasks;
+}
+
+std::vector<Task> db::getTasksAssignedTo(const std::string& username) {
+    auto& db = db::getConnection();
+    std::vector<Task> tasks;
+
+    try {
+        SQLite::Statement select(
+            db, "SELECT * FROM tasks WHERE assignedToUsername = ?");
+        select.bind(1, username);
+
+        while (select.executeStep()) {
+            Task task;
+            task.id = select.getColumn(0).getInt();
+            task.title = select.getColumn(1).getString();
+            task.priority = select.getColumn(2).getInt();
+            task.status = select.getColumn(3).getInt();
+            task.dueDate = select.getColumn(4).getInt64();
+            task.creationTime = select.getColumn(5).getInt64();
+            task.ownerId = select.getColumn(6).getInt();
+            task.assignedToUsername = select.getColumn(7).getString();
+            tasks.push_back(task);
+        }
+    } catch (const std::exception& e) {
+        std::println("{}\n", e.what());
+    }
+    return tasks;
+}
+
+bool db::updateTaskStatus(int id, int status) {
+    auto& db = db::getConnection();
+
+    try {
+        SQLite::Statement update(db,
+                                 "UPDATE tasks SET status = ? WHERE id = ?");
+        update.bind(1, status);
+        update.bind(2, id);
+        update.exec();
+        return true;
+    } catch (const std::exception& e) {
+        std::println("{}\n", e.what());
+        return false;
+    }
+}
+
+bool db::updateTaskPriority(int id, int priority) {
+    auto& db = db::getConnection();
+
+    try {
+        SQLite::Statement update(db,
+                                 "UPDATE tasks SET priority = ? WHERE id = ?");
+        update.bind(1, priority);
+        update.bind(2, id);
+        update.exec();
+        return true;
+    } catch (const std::exception& e) {
+        std::println("{}\n", e.what());
+        return false;
+    }
+}
+
+bool db::updateTaskDueDate(int id, std::time_t dueDate) {
+    auto& db = db::getConnection();
+
+    try {
+        SQLite::Statement update(db,
+                                 "UPDATE tasks SET dueDate = ? WHERE id = ?");
+        update.bind(1, static_cast<int64_t>(dueDate));
+        update.bind(2, id);
+        update.exec();
+        return true;
+    } catch (const std::exception& e) {
+        std::println("{}\n", e.what());
+        return false;
+    }
+}
+
+bool db::assignTask(int id, const std::string& username) {
+    auto& db = db::getConnection();
+
+    try {
+        SQLite::Statement update(
+            db, "UPDATE tasks SET assignedToUsername = ? WHERE id = ?");
+        update.bind(1, username);
+        update.bind(2, id);
+        update.exec();
+        return true;
+    } catch (const std::exception& e) {
+        std::println("{}\n", e.what());
+        return false;
+    }
+}
+
+bool db::updateTaskTitle(int id, const std::string& title) {
+    auto& db = db::getConnection();
+
+    try {
+        SQLite::Statement update(db, "UPDATE tasks SET title = ? WHERE id = ?");
+        update.bind(1, title);
+        update.bind(2, id);
+        update.exec();
+        return true;
+    } catch (const std::exception& e) {
+        std::println("{}\n", e.what());
+        return false;
+    }
+}
+
+bool db::deleteTask(int id) {
+    auto& db = db::getConnection();
+
+    try {
+        SQLite::Statement del(db, "DELETE FROM tasks WHERE id = ?");
+        del.bind(1, id);
+        del.exec();
+        return true;
+    } catch (const std::exception& e) {
+        std::println("{}\n", e.what());
+        return false;
+    }
+}

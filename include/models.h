@@ -16,8 +16,16 @@ struct Task {
     int id = 0;
     std::string title;
     int priority;
+    int status;
     std::time_t dueDate;
     std::time_t creationTime = std::time(nullptr);
     int ownerId;
     std::string assignedToUsername;
+};
+
+struct Team {
+    int id = 0;
+    std::string name;
+    std::string creatorUsername;
+    std::time_t creationTime = std::time(nullptr);
 };
