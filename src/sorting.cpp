@@ -1,0 +1,113 @@
+#include "sorting.h"
+
+#include <vector>
+
+namespace core {
+
+// ============================================================================
+// MERGE SORT
+// ============================================================================
+
+static void merge(std::vector<Task>& tasks, int left, int mid, int right,
+                  bool (*comparator)(const Task&, const Task&),
+                  std::vector<Task>& temp) {
+    int i = left;
+    int j = mid + 1;
+    int k = left;
+
+    while (i <= mid && j <= right) {
+        // Pick from left when equal to maintain stability
+        if (!comparator(tasks[j], tasks[i])) {
+            temp[k++] = tasks[i++];
+        } else {
+            temp[k++] = tasks[j++];
+        }
+    }
+
+    while (i <= mid) {
+        temp[k++] = tasks[i++];
+    }
+
+    while (j <= right) {
+        temp[k++] = tasks[j++];
+    }
+
+    for (i = left; i <= right; i++) {
+        tasks[i] = temp[i];
+    }
+}
+
+static void mergeSortHelper(std::vector<Task>& tasks, int left, int right,
+                            bool (*comparator)(const Task&, const Task&),
+                            std::vector<Task>& temp) {
+    if (left >= right) {
+        return;
+    }
+
+    int mid = left + (right - left) / 2;
+
+    mergeSortHelper(tasks, left, mid, comparator, temp);
+    mergeSortHelper(tasks, mid + 1, right, comparator, temp);
+    merge(tasks, left, mid, right, comparator, temp);
+}
+
+void mergeSort(std::vector<Task>& tasks,
+               bool (*comparator)(const Task&, const Task&)) {
+    if (tasks.size() <= 1) {
+        return;
+    }
+
+    std::vector<Task> temp(tasks.size());
+    mergeSortHelper(tasks, 0, static_cast<int>(tasks.size()) - 1, comparator,
+                    temp);
+}
+
+// ============================================================================
+// QUICK SORT
+// ============================================================================
+
+static int partition(std::vector<Task>& tasks, int low, int high,
+                     bool (*comparator)(const Task&, const Task&)) {
+    int mid = low + (high - low) / 2;
+    Task pivot = tasks[mid];
+
+    int i = low - 1;
+    int j = high + 1;
+
+    while (true) {
+        do {
+            i++;
+        } while (comparator(tasks[i], pivot));
+
+        do {
+            j--;
+        } while (comparator(pivot, tasks[j]));
+
+        if (i >= j) {
+            return j;
+        }
+
+        std::swap(tasks[i], tasks[j]);
+    }
+}
+
+static void quickSortHelper(std::vector<Task>& tasks, int low, int high,
+                            bool (*comparator)(const Task&, const Task&)) {
+    if (low < high) {
+        int pi = partition(tasks, low, high, comparator);
+
+        quickSortHelper(tasks, low, pi, comparator);
+        quickSortHelper(tasks, pi + 1, high, comparator);
+    }
+}
+
+void quickSort(std::vector<Task>& tasks,
+               bool (*comparator)(const Task&, const Task&)) {
+    if (tasks.size() <= 1) {
+        return;
+    }
+
+    quickSortHelper(tasks, 0, static_cast<int>(tasks.size()) - 1, comparator);
+}
+
+}  // namespace core
