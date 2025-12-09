@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 4.2)
 
 set(CMAKE_C_COMPILER clang)
 set(CMAKE_CXX_COMPILER clang++)
@@ -21,37 +21,27 @@ set(CASCADE_SOURCES
     src/security.cpp
     src/PriorityQueue.cpp
     src/sorting.cpp
+    src/TaskGraph.cpp
+    src/repository.cpp
 )
 
 # --- 1. Handle External Dependencies ---
 find_package(SQLite3 REQUIRED)
 find_package(OpenSSL)
 
-# --- 2. FetchContent for Dependencies ---
-include(FetchContent)
+# --- 2. Vendored Dependencies ---
+# Build Argon2 from lib/argon2
+add_subdirectory(lib/argon2)
 
-# Argon2
-FetchContent_Declare(
-  argon2
-  GIT_REPOSITORY https://github.com/P-H-C/phc-winner-argon2
-  GIT_TAG        20190702
-)
-
-set(ARGON2_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-
-FetchContent_MakeAvailable(argon2)
-
-# SQLiteCpp
-FetchContent_Declare(
-  SQLiteCpp
-  GIT_REPOSITORY https://github.com/SRombauts/SQLiteCpp
-  GIT_TAG        3.3.1
-)
-
+# Build SQLiteCpp from lib/sqlitecpp
 set(SQLITECPP_RUN_CPPLINT OFF CACHE BOOL "" FORCE)
 set(SQLITECPP_RUN_CPPCHECK OFF CACHE BOOL "" FORCE)
+set(SQLITECPP_RUN_DOXYGEN OFF CACHE BOOL "" FORCE)
+set(SQLITECPP_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(SQLITECPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(SQLITECPP_INCLUDE_SCRIPT OFF CACHE BOOL "" FORCE)
 
-FetchContent_MakeAvailable(SQLiteCpp)
+add_subdirectory(lib/sqlitecpp)
 
 # --- 3. Build the Main Executable ---
 add_executable(cascade ${CASCADE_SOURCES})
