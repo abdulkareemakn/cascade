@@ -23,6 +23,13 @@ struct Task {
     std::string assignedToUsername;
 };
 
+enum class TaskStatus : int {
+    TODO = 0,
+    IN_PROGRESS = 1,
+    DONE = 2,
+    WONT_DO = 3
+};
+
 struct Team {
     int id = 0;
     std::string name;

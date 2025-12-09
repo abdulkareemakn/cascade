@@ -32,6 +32,7 @@ bool createTask(const std::string& title, int priority, int status,
                 const std::string& assignedToUsername = "");
 std::optional<Task> getTask(int id);
 std::vector<Task> getTasksByUser(int userId);
+std::vector<Task> getIncompleteTasksByUser(int userID);
 std::vector<Task> getTasksAssignedTo(const std::string& username);
 bool updateTaskStatus(int id, int status);
 bool updateTaskPriority(int id, int priority);

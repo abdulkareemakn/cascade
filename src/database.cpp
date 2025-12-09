@@ -4,6 +4,7 @@
 #include <optional>
 #include <print>
 #include <string>
+#include <vector>
 
 #include "SQLiteCpp/Database.h"
 #include "SQLiteCpp/Statement.h"
@@ -335,6 +336,33 @@ std::vector<Task> db::getTasksByUser(int userId) {
     return tasks;
 }
 
+std::vector<Task> db::getIncompleteTasksByUser(int userId) {
+    auto& db = db::getConnection();
+    std::vector<Task> tasks;
+
+    try {
+        SQLite::Statement select(
+            db, "SELECT * FROM tasks WHERE ownerId = ? AND status != 2");
+        select.bind(1, userId);
+
+        while (select.executeStep()) {
+            Task task;
+            task.id = select.getColumn(0).getInt();
+            task.title = select.getColumn(1).getString();
+            task.priority = select.getColumn(2).getInt();
+            task.status = select.getColumn(3).getInt();
+            task.dueDate = select.getColumn(4).getInt64();
+            task.creationTime = select.getColumn(5).getInt64();
+            task.ownerId = select.getColumn(6).getInt();
+            task.assignedToUsername = select.getColumn(7).getString();
+            tasks.push_back(task);
+        }
+    } catch (const std::exception& e) {
+        std::println("{}\n", e.what());
+    }
+    return tasks;
+}
+
 std::vector<Task> db::getTasksAssignedTo(const std::string& username) {
     auto& db = db::getConnection();
     std::vector<Task> tasks;
@@ -343,6 +371,7 @@ std::vector<Task> db::getTasksAssignedTo(const std::string& username) {
         SQLite::Statement select(
             db, "SELECT * FROM tasks WHERE assignedToUsername = ?");
         select.bind(1, username);
+        select.bind(2, 2);
 
         while (select.executeStep()) {
             Task task;
