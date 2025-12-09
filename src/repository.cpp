@@ -1,75 +1,90 @@
 #include "repository.h"
 
-#include <ctime>
 #include <optional>
-#include <string>
 #include <vector>
 
+#include "PriorityQueue.h"
+#include "TaskGraph.h"
 #include "database.h"
 #include "models.h"
-#include "security.h"
+#include "sorting.h"
 
-// Do not use 'using namespace sqlite_orm;' as per user request.
+namespace repo {
+// ============================================================================
+// Graph Operations (DSA + DB)
+// ============================================================================
+core::TaskGraph buildTaskGraph(int userId) {
+    core::TaskGraph graph;
 
-bool db::createUser(const std::string& username, const std::string& email,
-                    const std::string& password) {
-    try {
-        auto storage = getStorage();
-        // Check if user already exists to avoid constraint violation exception
-        // (Optional, but cleaner)
-        auto count = storage.count<User>(
-            sqlite_orm::where(sqlite_orm::c(&User::username) == username));
-        if (count > 0) return false;
+    auto user = db::getUserById(userId);
+    if (!user.has_value()) {
+        return graph;
+    }
 
-        std::string hash = security::hashPassword(password);
+    std::vector<Task> tasks = db::getTasksByUser(userId);
+    for (const auto& task : tasks) {
+        graph.addTask(task);
+    }
 
-        User user{.username = username, .email = email, .passwordHash = hash};
-        auto insertedId = storage.insert(user);
-        return insertedId > 0;
-    } catch (...) {
+    for (const auto& task : tasks) {
+        auto dependencies = db::getTaskDependencies(task.id);
+        for (const auto& dep : dependencies) {
+            graph.addDependency(task.id, dep.id);
+        }
+    }
+
+    return graph;
+}
+
+bool addTaskDependencyWithValidation(int taskId, int dependsOnId) {
+    auto task = db::getTask(taskId);
+    if (!task) {
         return false;
     }
-}
-
-std::optional<User> db::getUser(const std::string& username) {
-    auto storage = getStorage();
-    auto users = storage.get_all<User>(
-        sqlite_orm::where(sqlite_orm::c(&User::username) == username));
-    
-    if (users.empty()) {
-        return std::nullopt;
-    }
-    return users.front();
-}
-
-// Note: Removed assignedToUsername to match header. 
-// If you need it, update header first.
-bool db::createTask(const std::string& title, int priority, std::time_t dueDate,
-                    int ownerId) {
-    try {
-        auto storage = getStorage();
-        Task task{
-            .title = title,
-            .priority = priority,
-            .dueDate = dueDate,
-            .ownerId = ownerId,
-            .assignedToUsername = "" // Default empty for now
-        };
-
-        auto insertedId = storage.insert(task);
-        return insertedId > 0;
-    } catch (...) {
+    auto graph = buildTaskGraph(task->ownerId);
+    bool canAdd = graph.addDependency(taskId, dependsOnId);
+    if (!canAdd) {
         return false;
     }
+    return db::addTaskDependency(taskId, dependsOnId);
 }
 
-std::vector<Task> db::getTasks(const std::string& username) {
-    auto userOpt = getUser(username);
-    if (!userOpt) {
-        return {}; // Return empty list if user doesn't exist
+std::vector<int> getTaskExecutionOrder(int userId) {
+    auto graph = buildTaskGraph(userId);
+
+    std::vector<int> order = graph.topologicalSort();
+
+    return order;
+}
+
+core::CriticalPathResult getProjectCriticalPath(int userId) {
+    auto graph = buildTaskGraph(userId);
+    return graph.criticalPath();
+}
+
+core::Queue loadUserTaskQueue(int userId) {
+    core::Queue queue;
+
+    auto tasks = db::getIncompleteTasksByUser(userId);
+
+    for (const auto& task : tasks) {
+        queue.insert(task);
     }
 
-    auto storage = getStorage();
-    return storage.get_all<Task>(
-        sqlite_orm::where(sqlite_orm::c(&Task::ownerId) == userOpt->id));
+    return queue;
 }
+
+std::optional<Task> getNextPriorityTask(int userId) {
+    auto queue = loadUserTaskQueue(userId);
+    return queue.extractMin();
+}
+
+std::vector<Task> getSortedTasks(int userId,
+                                 bool (*comparator)(const Task&, const Task&)) {
+    auto tasks = db::getTasksByUser(userId);
+
+    core::mergeSort(tasks, comparator);
+
+    return tasks;
+}
+}  // namespace repo

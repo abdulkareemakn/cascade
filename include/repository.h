@@ -4,15 +4,24 @@
 #include <string>
 #include <vector>
 
+#include "PriorityQueue.h"
+#include "TaskGraph.h"
 #include "models.h"
-namespace db {
-bool createUser(const std::string& username, const std::string& email,
-                const std::string& password);
+#include "sorting.h"
 
-std::optional<User> getUser(const std::string& username);
+// Graph Operations (DSA + DB)
 
-bool createTask(const std::string& title, int priority, std::time_t dueDate,
-                int ownerId);
+namespace repo {
+core::TaskGraph buildTaskGraph(int userId);
+bool addTaskDependencyWithValidation(int taskId, int dependsOnId);
+std::vector<int> getTaskExecutionOrder(int userId);
+core::CriticalPathResult getProjectCriticalPath(int userId);
 
-std::vector<Task> getTasks(const std::string& username);
-}  // namespace db
+// Priority Queue Operations (DSA + DB)
+core::Queue loadUserTaskQueue(int userId);
+std::optional<Task> getNextPriorityTask(int userId);
+
+// Sorting Operations (DSA + DB)
+std::vector<Task> getSortedTasks(int userId,
+                                 bool (*comparator)(const Task&, const Task&));
+}  // namespace repo
