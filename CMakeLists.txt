@@ -23,6 +23,7 @@ set(CASCADE_SOURCES
     src/sorting.cpp
     src/TaskGraph.cpp
     src/repository.cpp
+    src/session.cpp
 )
 
 # --- 1. Handle External Dependencies ---
@@ -43,6 +44,9 @@ set(SQLITECPP_INCLUDE_SCRIPT OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(lib/sqlitecpp)
 
+# FMT
+add_subdirectory(lib/fmt)
+
 # --- 3. Build the Main Executable ---
 add_executable(cascade ${CASCADE_SOURCES})
 
@@ -54,6 +58,8 @@ set(DATABASE_ABSOLUTE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/db/cascade.db")
 target_compile_definitions(cascade PRIVATE "-DDATABASE_FILE=\"${DATABASE_ABSOLUTE_PATH}\"")
 
 target_include_directories(cascade PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(cascade PRIVATE ${PROJECT_SOURCE_DIR}/lib/tabulate)
+target_include_directories(cascade PRIVATE ${PROJECT_SOURCE_DIR}/lib/CLI11)
 
 # --- 4. Link Everything ---
 target_link_libraries(cascade PRIVATE 
@@ -63,6 +69,7 @@ target_link_libraries(cascade PRIVATE
     pthread 
     dl 
     c++abi
+    fmt::fmt
 )
 
 if(OPENSSL_FOUND)
