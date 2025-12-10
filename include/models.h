@@ -20,7 +20,6 @@ struct Task {
     std::time_t dueDate;
     std::time_t creationTime = std::time(nullptr);
     int ownerId;
-    std::string assignedToUsername;
 };
 
 enum class TaskStatus : int {
@@ -28,19 +27,6 @@ enum class TaskStatus : int {
     IN_PROGRESS = 1,
     DONE = 2,
     WONT_DO = 3
-};
-
-struct Team {
-    int id = 0;
-    std::string name;
-    int creatorId;
-    std::time_t creationTime = std::time(nullptr);
-};
-
-struct TeamMember {
-    int userId;
-    int teamId;
-    std::string role;  // e.g., "admin", "member"
 };
 
 struct TaskDependency {
