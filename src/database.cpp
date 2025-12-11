@@ -1,5 +1,6 @@
 #include "database.h"
 
+#include <cmath>
 #include <exception>
 #include <optional>
 #include <print>
@@ -15,7 +16,7 @@ void db::initDatabase() {
     db.exec("PRAGMA foreign_keys = ON;");
 
     db.exec(
-        "CREATE TABLE IF NOT EXISTS users (id INTEGER NOT NULL PRIMARY KEY "
+        "CREATE TABLE IF NOT EXISTS user (id INTEGER NOT NULL PRIMARY KEY "
         "AUTOINCREMENT, "
         "username TEXT NOT NULL, email TEXT UNIQUE NOT NULL, passwordHash TEXT "
         "NOT "
@@ -50,20 +51,14 @@ SQLite::Database &db::getConnection() {
     return db;
 }
 
-bool db::createUser(const std::string &username, const std::string &email,
-                    const std::string &password) {
+bool db::createUser(const std::string &username) {
     auto &db = db::getConnection();
 
     try {
-        SQLite::Statement insert(
-            db,
-            "INSERT INTO users (username, email, passwordHash, creationTime) "
-            "VALUES (?, ?, ?, unixepoch())");
-
+        SQLite::Statement insert(db,
+                                 "INSERT INTO user (username, creationTime) "
+                                 "VALUES (?, unixepoch())");
         insert.bind(1, username);
-        insert.bind(2, email);
-        insert.bind(3, hash);
-
         insert.exec();
     }
 
@@ -78,15 +73,12 @@ std::optional<User> db::getUser(const std::string &username) {
     auto &db = db::getConnection();
 
     try {
-        SQLite::Statement select(db, "SELECT * FROM users WHERE username = ?");
+        SQLite::Statement select(db, "SELECT * FROM user WHERE username = ?");
         select.bind(1, username);
 
         if (select.executeStep()) {
             User user;
-            user.id = select.getColumn(0).getInt();
             user.username = select.getColumn(1).getString();
-            user.email = select.getColumn(2).getString();
-            user.passwordHash = select.getColumn(3).getString();
             user.creationTime = select.getColumn(4).getInt();
             return user;
         }
@@ -101,15 +93,12 @@ std::optional<User> db::getUserById(int id) {
     auto &db = db::getConnection();
 
     try {
-        SQLite::Statement select(db, "SELECT * FROM users WHERE id = ?");
+        SQLite::Statement select(db, "SELECT * FROM user WHERE id = ?");
         select.bind(1, id);
 
         if (select.executeStep()) {
             User user;
-            user.id = select.getColumn(0).getInt();
             user.username = select.getColumn(1).getString();
-            user.email = select.getColumn(2).getString();
-            user.passwordHash = select.getColumn(3).getString();
             user.creationTime = select.getColumn(4).getInt();
             return user;
         }
@@ -124,15 +113,12 @@ std::optional<User> db::getUserByEmail(const std::string &email) {
     auto &db = db::getConnection();
 
     try {
-        SQLite::Statement select(db, "SELECT * FROM users WHERE email = ?");
+        SQLite::Statement select(db, "SELECT * FROM user WHERE email = ?");
         select.bind(1, email);
 
         if (select.executeStep()) {
             User user;
-            user.id = select.getColumn(0).getInt();
             user.username = select.getColumn(1).getString();
-            user.email = select.getColumn(2).getString();
-            user.passwordHash = select.getColumn(3).getString();
             user.creationTime = select.getColumn(4).getInt();
             return user;
         }
@@ -143,61 +129,27 @@ std::optional<User> db::getUserByEmail(const std::string &email) {
     }
 }
 
-bool db::deleteUser(int id) {
-    auto &db = db::getConnection();
-
-    try {
-        SQLite::Statement del(db, "DELETE FROM users WHERE id = ?");
-        del.bind(1, id);
-        del.exec();
-
-    } catch (const std::exception &e) {
-        std::println("{}\n", e.what());
-        return false;
-    }
-
-    return true;
-}
-
 std::string db::getUsername(int userId) {
     auto user = getUserById(userId);
     return user.value().username;
 }
 
-// TODO: Refactor such that getUser when not logged in calls authenticateUser
-// before returning.
-
-bool db::updateEmail(int userId, const std::string &newEmail) {
+bool db::updateUsername(const std::string &oldUsername,
+                        const std::string &newUsername) {
     auto &db = db::getConnection();
 
     try {
-        SQLite::Statement update(db, "UPDATE users SET email = ? WHERE id = ?");
-        update.bind(1, newEmail);
-        update.bind(2, userId);
-        update.exec();
+        SQLite::Statement update(
+            db, "UPDATE user SET username = ? WHERE username = ?");
 
-        return true;
+        update.bind(1, oldUsername);
+        update.bind(2, newUsername);
+
     } catch (const std::exception &e) {
         std::println("{}\n", e.what());
         return false;
     }
-}
-
-bool db::updateUsername(int userId, const std::string &newUsername) {
-    auto &db = db::getConnection();
-
-    try {
-        SQLite::Statement update(db,
-                                 "UPDATE users SET username = ? WHERE id = ?");
-        update.bind(1, newUsername);
-        update.bind(2, userId);
-        update.exec();
-
-        return true;
-    } catch (const std::exception &e) {
-        std::println("{}\n", e.what());
-        return false;
-    }
+    return true;
 }
 
 bool db::createTask(const std::string &title, int priority, int status,
@@ -238,7 +190,6 @@ std::optional<Task> db::getTask(int id) {
             task.status = select.getColumn(3).getInt();
             task.dueDate = select.getColumn(4).getInt64();
             task.creationTime = select.getColumn(5).getInt64();
-            task.ownerId = select.getColumn(6).getInt();
             return task;
         }
         return std::nullopt;
@@ -264,7 +215,6 @@ std::vector<Task> db::getTasksByUser(int userId) {
             task.status = select.getColumn(3).getInt();
             task.dueDate = select.getColumn(4).getInt64();
             task.creationTime = select.getColumn(5).getInt64();
-            task.ownerId = select.getColumn(6).getInt();
             tasks.push_back(task);
         }
     } catch (const std::exception &e) {
@@ -290,7 +240,6 @@ std::vector<Task> db::getIncompleteTasksByUser(int userId) {
             task.status = select.getColumn(3).getInt();
             task.dueDate = select.getColumn(4).getInt64();
             task.creationTime = select.getColumn(5).getInt64();
-            task.ownerId = select.getColumn(6).getInt();
             tasks.push_back(task);
         }
     } catch (const std::exception &e) {
@@ -431,7 +380,6 @@ std::vector<Task> db::getTaskDependencies(int taskId) {
             task.status = select.getColumn(3).getInt();
             task.dueDate = select.getColumn(4).getInt64();
             task.creationTime = select.getColumn(5).getInt64();
-            task.ownerId = select.getColumn(6).getInt();
             dependencies.push_back(task);
         }
     } catch (const std::exception &e) {
@@ -460,7 +408,6 @@ std::vector<Task> db::getTaskDependents(int taskId) {
             task.status = select.getColumn(3).getInt();
             task.dueDate = select.getColumn(4).getInt64();
             task.creationTime = select.getColumn(5).getInt64();
-            task.ownerId = select.getColumn(6).getInt();
             dependents.push_back(task);
         }
     } catch (const std::exception &e) {
