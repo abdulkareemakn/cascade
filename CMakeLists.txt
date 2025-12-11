@@ -18,12 +18,12 @@ add_link_options(-stdlib=libc++)
 set(CASCADE_SOURCES
     src/main.cpp
     src/database.cpp
-    src/security.cpp
     src/PriorityQueue.cpp
     src/sorting.cpp
     src/TaskGraph.cpp
-    src/repository.cpp
+    # src/repository.cpp
     src/session.cpp
+    src/util.cpp
 )
 
 # --- 1. Handle External Dependencies ---
@@ -31,9 +31,6 @@ find_package(SQLite3 REQUIRED)
 find_package(OpenSSL)
 
 # --- 2. Vendored Dependencies ---
-# Build Argon2 from lib/argon2
-add_subdirectory(lib/argon2)
-
 # Build SQLiteCpp from lib/sqlitecpp
 set(SQLITECPP_RUN_CPPLINT OFF CACHE BOOL "" FORCE)
 set(SQLITECPP_RUN_CPPCHECK OFF CACHE BOOL "" FORCE)
@@ -65,7 +62,6 @@ target_include_directories(cascade PRIVATE ${PROJECT_SOURCE_DIR}/lib/CLI11)
 target_link_libraries(cascade PRIVATE 
     SQLiteCpp
     SQLite::SQLite3
-    argon2
     pthread 
     dl 
     c++abi
