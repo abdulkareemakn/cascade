@@ -7,5 +7,7 @@ TabWidth: 4
 UseTab: Never
 
 # SpaceBeforePointer: True
+PointerAlignment: Right
+ReferenceAlignment: Right
 
 ...

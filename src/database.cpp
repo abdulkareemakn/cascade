@@ -39,7 +39,7 @@ void db::initDatabase() {
         "PRIMARY KEY (taskId, dependsOnTaskId));");
 }
 
-SQLite::Database& db::getConnection() {
+SQLite::Database &db::getConnection() {
     // TODO: Replace singleton with connection pool for multi-user support
     static SQLite::Database db(DATABASE_FILE,
                                SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE);
@@ -51,9 +51,9 @@ SQLite::Database& db::getConnection() {
     return db;
 }
 
-bool db::createUser(const std::string& username, const std::string& email,
-                    const std::string& password) {
-    auto& db = db::getConnection();
+bool db::createUser(const std::string &username, const std::string &email,
+                    const std::string &password) {
+    auto &db = db::getConnection();
 
     std::string hash = security::hashPassword(password);
 
@@ -70,15 +70,15 @@ bool db::createUser(const std::string& username, const std::string& email,
         insert.exec();
     }
 
-    catch (const std::exception& e) {
+    catch (const std::exception &e) {
         std::println("{}\n", e.what());
         return false;
     }
     return true;
 }
 
-std::optional<User> db::getUser(const std::string& username) {
-    auto& db = db::getConnection();
+std::optional<User> db::getUser(const std::string &username) {
+    auto &db = db::getConnection();
 
     try {
         SQLite::Statement select(db, "SELECT * FROM users WHERE username = ?");
@@ -94,14 +94,14 @@ std::optional<User> db::getUser(const std::string& username) {
             return user;
         }
         return std::nullopt;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
         return std::nullopt;
     }
 }
 
 std::optional<User> db::getUserById(int id) {
-    auto& db = db::getConnection();
+    auto &db = db::getConnection();
 
     try {
         SQLite::Statement select(db, "SELECT * FROM users WHERE id = ?");
@@ -117,14 +117,14 @@ std::optional<User> db::getUserById(int id) {
             return user;
         }
         return std::nullopt;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
         return std::nullopt;
     }
 }
 
-std::optional<User> db::getUserByEmail(const std::string& email) {
-    auto& db = db::getConnection();
+std::optional<User> db::getUserByEmail(const std::string &email) {
+    auto &db = db::getConnection();
 
     try {
         SQLite::Statement select(db, "SELECT * FROM users WHERE email = ?");
@@ -140,21 +140,21 @@ std::optional<User> db::getUserByEmail(const std::string& email) {
             return user;
         }
         return std::nullopt;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
         return std::nullopt;
     }
 }
 
 bool db::deleteUser(int id) {
-    auto& db = db::getConnection();
+    auto &db = db::getConnection();
 
     try {
         SQLite::Statement del(db, "DELETE FROM users WHERE id = ?");
         del.bind(1, id);
         del.exec();
 
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
         return false;
     }
@@ -162,11 +162,16 @@ bool db::deleteUser(int id) {
     return true;
 }
 
+std::string db::getUsername(int userId) {
+    auto user = getUserById(userId);
+    return user.value().username;
+}
+
 // TODO: Refactor such that getUser when not logged in calls authenticateUser
 // before returning.
-bool db::authenticateUser(const std::string& email,
-                          const std::string& password) {
-    auto& db = db::getConnection();
+bool db::authenticateUser(const std::string &email,
+                          const std::string &password) {
+    auto &db = db::getConnection();
 
     try {
         SQLite::Statement select(db, "SELECT * FROM users WHERE email = ?");
@@ -184,14 +189,14 @@ bool db::authenticateUser(const std::string& email,
         }
         return false;
 
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
         return false;
     }
 }
 
-bool db::updateEmail(int userId, const std::string& newEmail) {
-    auto& db = db::getConnection();
+bool db::updateEmail(int userId, const std::string &newEmail) {
+    auto &db = db::getConnection();
 
     try {
         SQLite::Statement update(db, "UPDATE users SET email = ? WHERE id = ?");
@@ -200,14 +205,14 @@ bool db::updateEmail(int userId, const std::string& newEmail) {
         update.exec();
 
         return true;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
         return false;
     }
 }
 
-bool db::updatePassword(int userId, const std::string& newPassword) {
-    auto& db = db::getConnection();
+bool db::updatePassword(int userId, const std::string &newPassword) {
+    auto &db = db::getConnection();
 
     try {
         SQLite::Statement update(
@@ -217,14 +222,14 @@ bool db::updatePassword(int userId, const std::string& newPassword) {
         update.exec();
 
         return true;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
         return false;
     }
 }
 
-bool db::updateUsername(int userId, const std::string& newUsername) {
-    auto& db = db::getConnection();
+bool db::updateUsername(int userId, const std::string &newUsername) {
+    auto &db = db::getConnection();
 
     try {
         SQLite::Statement update(db,
@@ -234,31 +239,29 @@ bool db::updateUsername(int userId, const std::string& newUsername) {
         update.exec();
 
         return true;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
         return false;
     }
 }
 
-bool db::createTask(const std::string& title, int priority, int status,
-                    std::time_t dueDate, int ownerId) {
-    auto& db = db::getConnection();
+bool db::createTask(const std::string &title, int priority, int status,
+                    std::time_t dueDate) {
+    auto &db = db::getConnection();
 
     try {
-        SQLite::Statement insert(
-            db,
-            "INSERT INTO tasks (title, priority, status, "
-            "dueDate, creationTime, ownerId) VALUES (?, ?, "
-            "?, ?, unixepoch(), ?)");
+        SQLite::Statement insert(db,
+                                 "INSERT INTO tasks (title, priority, status, "
+                                 "dueDate, creationTime) VALUES (?, ?, "
+                                 "?, ?, unixepoch(), ?)");
 
         insert.bind(1, title);
         insert.bind(2, priority);
         insert.bind(3, status);
         insert.bind(4, static_cast<int64_t>(dueDate));
-        insert.bind(5, ownerId);
 
         insert.exec();
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
         return false;
     }
@@ -266,7 +269,7 @@ bool db::createTask(const std::string& title, int priority, int status,
 }
 
 std::optional<Task> db::getTask(int id) {
-    auto& db = db::getConnection();
+    auto &db = db::getConnection();
 
     try {
         SQLite::Statement select(db, "SELECT * FROM tasks WHERE id = ?");
@@ -284,14 +287,14 @@ std::optional<Task> db::getTask(int id) {
             return task;
         }
         return std::nullopt;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
         return std::nullopt;
     }
 }
 
 std::vector<Task> db::getTasksByUser(int userId) {
-    auto& db = db::getConnection();
+    auto &db = db::getConnection();
     std::vector<Task> tasks;
 
     try {
@@ -309,14 +312,14 @@ std::vector<Task> db::getTasksByUser(int userId) {
             task.ownerId = select.getColumn(6).getInt();
             tasks.push_back(task);
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
     }
     return tasks;
 }
 
 std::vector<Task> db::getIncompleteTasksByUser(int userId) {
-    auto& db = db::getConnection();
+    auto &db = db::getConnection();
     std::vector<Task> tasks;
 
     try {
@@ -335,14 +338,14 @@ std::vector<Task> db::getIncompleteTasksByUser(int userId) {
             task.ownerId = select.getColumn(6).getInt();
             tasks.push_back(task);
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
     }
     return tasks;
 }
 
 bool db::updateTaskStatus(int id, int status) {
-    auto& db = db::getConnection();
+    auto &db = db::getConnection();
 
     try {
         SQLite::Statement update(db,
@@ -351,14 +354,14 @@ bool db::updateTaskStatus(int id, int status) {
         update.bind(2, id);
         update.exec();
         return true;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
         return false;
     }
 }
 
 bool db::updateTaskPriority(int id, int priority) {
-    auto& db = db::getConnection();
+    auto &db = db::getConnection();
 
     try {
         SQLite::Statement update(db,
@@ -367,14 +370,14 @@ bool db::updateTaskPriority(int id, int priority) {
         update.bind(2, id);
         update.exec();
         return true;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
         return false;
     }
 }
 
 bool db::updateTaskDueDate(int id, std::time_t dueDate) {
-    auto& db = db::getConnection();
+    auto &db = db::getConnection();
 
     try {
         SQLite::Statement update(db,
@@ -383,14 +386,14 @@ bool db::updateTaskDueDate(int id, std::time_t dueDate) {
         update.bind(2, id);
         update.exec();
         return true;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
         return false;
     }
 }
 
-bool db::updateTaskTitle(int id, const std::string& title) {
-    auto& db = db::getConnection();
+bool db::updateTaskTitle(int id, const std::string &title) {
+    auto &db = db::getConnection();
 
     try {
         SQLite::Statement update(db, "UPDATE tasks SET title = ? WHERE id = ?");
@@ -398,28 +401,28 @@ bool db::updateTaskTitle(int id, const std::string& title) {
         update.bind(2, id);
         update.exec();
         return true;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
         return false;
     }
 }
 
 bool db::deleteTask(int id) {
-    auto& db = db::getConnection();
+    auto &db = db::getConnection();
 
     try {
         SQLite::Statement del(db, "DELETE FROM tasks WHERE id = ?");
         del.bind(1, id);
         del.exec();
         return true;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
         return false;
     }
 }
 
 bool db::addTaskDependency(int taskId, int dependsOnTaskId) {
-    auto& db = db::getConnection();
+    auto &db = db::getConnection();
 
     try {
         SQLite::Statement insert(
@@ -430,14 +433,14 @@ bool db::addTaskDependency(int taskId, int dependsOnTaskId) {
         insert.bind(2, dependsOnTaskId);
         insert.exec();
         return true;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
         return false;
     }
 }
 
 bool db::removeTaskDependency(int taskId, int dependsOnTaskId) {
-    auto& db = db::getConnection();
+    auto &db = db::getConnection();
 
     try {
         SQLite::Statement del(db,
@@ -447,14 +450,14 @@ bool db::removeTaskDependency(int taskId, int dependsOnTaskId) {
         del.bind(2, dependsOnTaskId);
         del.exec();
         return true;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
         return false;
     }
 }
 
 std::vector<Task> db::getTaskDependencies(int taskId) {
-    auto& db = db::getConnection();
+    auto &db = db::getConnection();
     std::vector<Task> dependencies;
 
     try {
@@ -476,14 +479,14 @@ std::vector<Task> db::getTaskDependencies(int taskId) {
             task.ownerId = select.getColumn(6).getInt();
             dependencies.push_back(task);
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
     }
     return dependencies;
 }
 
 std::vector<Task> db::getTaskDependents(int taskId) {
-    auto& db = db::getConnection();
+    auto &db = db::getConnection();
     std::vector<Task> dependents;
 
     try {
@@ -505,7 +508,7 @@ std::vector<Task> db::getTaskDependents(int taskId) {
             task.ownerId = select.getColumn(6).getInt();
             dependents.push_back(task);
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::println("{}\n", e.what());
     }
     return dependents;
