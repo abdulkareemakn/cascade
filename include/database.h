@@ -17,7 +17,6 @@ SQLite::Database &getConnection();
 // User CRUD
 bool createUser(const std::string &username, const std::string &email,
                 const std::string &password);
-bool authenticateUser(const std::string &email, const std::string &password);
 std::optional<User> getUser(const std::string &username);
 std::optional<User> getUserById(int id);
 std::optional<User> getUserByEmail(const std::string &email);
@@ -25,7 +24,6 @@ std::string getUsername(int userId);
 bool deleteUser(int id);
 bool updateEmail(int userId, const std::string &newEmail);
 bool updatePassword(int userId, const std::string &newPassword);
-bool updateUsername(int userId, const std::string &newUsername);
 
 // Task CRUD
 bool createTask(const std::string &title, int priority, int status,

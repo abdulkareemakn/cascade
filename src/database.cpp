@@ -8,7 +8,6 @@
 
 #include "SQLiteCpp/Database.h"
 #include "SQLiteCpp/Statement.h"
-#include "security.h"
 
 void db::initDatabase() {
     SQLite::Database db(DATABASE_FILE,
@@ -54,8 +53,6 @@ SQLite::Database &db::getConnection() {
 bool db::createUser(const std::string &username, const std::string &email,
                     const std::string &password) {
     auto &db = db::getConnection();
-
-    std::string hash = security::hashPassword(password);
 
     try {
         SQLite::Statement insert(
@@ -169,31 +166,6 @@ std::string db::getUsername(int userId) {
 
 // TODO: Refactor such that getUser when not logged in calls authenticateUser
 // before returning.
-bool db::authenticateUser(const std::string &email,
-                          const std::string &password) {
-    auto &db = db::getConnection();
-
-    try {
-        SQLite::Statement select(db, "SELECT * FROM users WHERE email = ?");
-        select.bind(1, email);
-        if (select.executeStep()) {
-            User user;
-            user.id = select.getColumn(0).getInt();
-            user.username = select.getColumn(1).getString();
-            user.email = select.getColumn(2).getString();
-            user.passwordHash = select.getColumn(3).getString();
-            user.creationTime = select.getColumn(4).getInt();
-            if (security::verifyPassword(password, user.passwordHash)) {
-                return true;
-            }
-        }
-        return false;
-
-    } catch (const std::exception &e) {
-        std::println("{}\n", e.what());
-        return false;
-    }
-}
 
 bool db::updateEmail(int userId, const std::string &newEmail) {
     auto &db = db::getConnection();
@@ -201,23 +173,6 @@ bool db::updateEmail(int userId, const std::string &newEmail) {
     try {
         SQLite::Statement update(db, "UPDATE users SET email = ? WHERE id = ?");
         update.bind(1, newEmail);
-        update.bind(2, userId);
-        update.exec();
-
-        return true;
-    } catch (const std::exception &e) {
-        std::println("{}\n", e.what());
-        return false;
-    }
-}
-
-bool db::updatePassword(int userId, const std::string &newPassword) {
-    auto &db = db::getConnection();
-
-    try {
-        SQLite::Statement update(
-            db, "UPDATE users SET passwordHash = ? WHERE id = ?");
-        update.bind(1, security::hashPassword(newPassword));
         update.bind(2, userId);
         update.exec();
 
