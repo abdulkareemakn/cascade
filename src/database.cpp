@@ -9,6 +9,7 @@
 
 #include "SQLiteCpp/Database.h"
 #include "SQLiteCpp/Statement.h"
+#include "models.h"
 
 void db::initDatabase() {
     SQLite::Database db(DATABASE_FILE,
@@ -16,26 +17,23 @@ void db::initDatabase() {
     db.exec("PRAGMA foreign_keys = ON;");
 
     db.exec(
-        "CREATE TABLE IF NOT EXISTS user (id INTEGER NOT NULL PRIMARY KEY "
-        "AUTOINCREMENT, "
-        "username TEXT NOT NULL, email TEXT UNIQUE NOT NULL, passwordHash TEXT "
-        "NOT "
-        "NULL, creationTime INTEGER NOT NULL);");
+        "CREATE TABLE IF NOT EXISTS user ("
+        "username TEXT NOT NULL, "
+        "creationTime INTEGER NOT NULL);");
 
     db.exec(
-        "CREATE TABLE IF NOT EXISTS tasks (id INTEGER NOT NULL PRIMARY KEY "
-        "AUTOINCREMENT, "
-        "title TEXT NOT NULL, priority INTEGER, status INTEGER NOT NULL, "
-        "dueDate INTEGER, creationTime INTEGER NOT NULL, ownerId INTEGER NOT "
-        "NULL, "
-        "FOREIGN KEY (ownerId) REFERENCES users(id) ON DELETE CASCADE);");
+        "CREATE TABLE IF NOT EXISTS tasks ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "title TEXT NOT NULL, "
+        "priority INTEGER NOT NULL DEFAULT 2, "
+        "status INTEGER NOT NULL DEFAULT 0, "
+        "dueDate INTEGER NOT NULL DEFAULT 0, "
+        "creationTime INTEGER NOT NULL);");
 
     db.exec(
         "CREATE TABLE IF NOT EXISTS task_dependencies ("
         "taskId INTEGER NOT NULL, "
         "dependsOnTaskId INTEGER NOT NULL, "
-        "FOREIGN KEY (taskId) REFERENCES tasks(id) ON DELETE CASCADE, "
-        "FOREIGN KEY (dependsOnTaskId) REFERENCES tasks(id) ON DELETE CASCADE, "
         "PRIMARY KEY (taskId, dependsOnTaskId));");
 }
 
@@ -49,6 +47,13 @@ SQLite::Database &db::getConnection() {
         initialized = true;
     }
     return db;
+}
+
+bool db::hasUser() {
+    auto &db = db::getConnection();
+    SQLite::Statement select(db, "SELECT COUNT(*) FROM user");
+    select.executeStep();
+    return select.getColumn(0).getInt() > 0;
 }
 
 bool db::createUser(const std::string &username) {
@@ -69,69 +74,22 @@ bool db::createUser(const std::string &username) {
     return true;
 }
 
-std::optional<User> db::getUser(const std::string &username) {
+User db::getUser() {
     auto &db = db::getConnection();
+    User user;
 
     try {
-        SQLite::Statement select(db, "SELECT * FROM user WHERE username = ?");
-        select.bind(1, username);
-
+        SQLite::Statement select(db, "SELECT * FROM user LIMIT 1");
         if (select.executeStep()) {
-            User user;
-            user.username = select.getColumn(1).getString();
-            user.creationTime = select.getColumn(4).getInt();
+            user.username = select.getColumn(0).getString();
+            user.creationTime = select.getColumn(1).getInt();
             return user;
         }
-        return std::nullopt;
+
     } catch (const std::exception &e) {
         std::println("{}\n", e.what());
-        return std::nullopt;
     }
-}
-
-std::optional<User> db::getUserById(int id) {
-    auto &db = db::getConnection();
-
-    try {
-        SQLite::Statement select(db, "SELECT * FROM user WHERE id = ?");
-        select.bind(1, id);
-
-        if (select.executeStep()) {
-            User user;
-            user.username = select.getColumn(1).getString();
-            user.creationTime = select.getColumn(4).getInt();
-            return user;
-        }
-        return std::nullopt;
-    } catch (const std::exception &e) {
-        std::println("{}\n", e.what());
-        return std::nullopt;
-    }
-}
-
-std::optional<User> db::getUserByEmail(const std::string &email) {
-    auto &db = db::getConnection();
-
-    try {
-        SQLite::Statement select(db, "SELECT * FROM user WHERE email = ?");
-        select.bind(1, email);
-
-        if (select.executeStep()) {
-            User user;
-            user.username = select.getColumn(1).getString();
-            user.creationTime = select.getColumn(4).getInt();
-            return user;
-        }
-        return std::nullopt;
-    } catch (const std::exception &e) {
-        std::println("{}\n", e.what());
-        return std::nullopt;
-    }
-}
-
-std::string db::getUsername(int userId) {
-    auto user = getUserById(userId);
-    return user.value().username;
+    return user;
 }
 
 bool db::updateUsername(const std::string &oldUsername,
@@ -142,8 +100,8 @@ bool db::updateUsername(const std::string &oldUsername,
         SQLite::Statement update(
             db, "UPDATE user SET username = ? WHERE username = ?");
 
-        update.bind(1, oldUsername);
-        update.bind(2, newUsername);
+        update.bind(1, newUsername);
+        update.bind(2, oldUsername);
 
     } catch (const std::exception &e) {
         std::println("{}\n", e.what());

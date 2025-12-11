@@ -13,10 +13,12 @@ void initDatabase();
 SQLite::Database &getConnection();
 
 // User CRUD
+//
+//
+bool hasUser();
 bool createUser(const std::string &username);
-std::optional<User> getUser(const std::string &username);
-std::optional<User> getUserById(int id);
-std::optional<User> getUserByEmail(const std::string &email);
+User getUser();
+
 std::string getUsername(int userId);
 bool updateUsername(const std::string &oldUsername,
                     const std::string &newUsername);

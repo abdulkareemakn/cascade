@@ -35,7 +35,7 @@ bool saveSession(const std::string &username) {
     return sessionFile.good();
 }
 
-std::optional<int> session::getCurrentUser() {
+std::optional<std::string> session::getSession() {
     fs::path sessionPath = getSessionPath();
 
     if (!fs::exists(sessionPath)) {
@@ -47,7 +47,7 @@ std::optional<int> session::getCurrentUser() {
         return std::nullopt;
     }
 
-    int userId;
-    sessionFile >> userId;
-    return userId;
+    std::string username;
+    sessionFile >> username;
+    return username;
 }
