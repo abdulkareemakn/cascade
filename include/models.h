@@ -19,13 +19,12 @@ struct Task {
     int status;
     std::time_t dueDate;
     std::time_t creationTime = std::time(nullptr);
-    int ownerId;
 };
 
 enum class TaskStatus : int {
     TODO = 0,
     IN_PROGRESS = 1,
-    DONE = 2,
+    COMPLETE = 2,
     WONT_DO = 3
 };
 
