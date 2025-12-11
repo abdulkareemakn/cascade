@@ -5,8 +5,6 @@
 
 namespace session {
 std::filesystem::path getSessionPath();
-bool login(int userId);
-bool logout();
+bool saveSession(const std::string &username);
 std::optional<int> getCurrentUser();
-bool isLoggedIn();
 };  // namespace session
