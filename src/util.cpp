@@ -32,13 +32,13 @@ std::time_t parseDate(const std::string &date) {
         return now;
     }
     if (date == "tomorrow") {
-        return now + 86400;  // 24 * 60 * 60
+        return now + SECONDS_PER_DAY;
     }
     if (date == "next-week") {
-        return now + 604800;  // 7 * 24 * 60 * 60
+        return now + SECONDS_PER_WEEK;
     }
     if (date == "next-month") {
-        return now + 2592000;  // 30 * 24 * 60 * 60
+        return now + SECONDS_PER_MONTH;
     }
 
     // Parse YYYY-MM-DD format
@@ -79,17 +79,32 @@ std::string statusToString(int status) {
 }
 
 void styleTable(tabulate::Table &table) {
-    // Remove all borders for a clean, minimal look
+    // Option 7: Header-only border style
+    // Configure table-level format
     table.format()
         .border_top("")
-        .border_bottom("")
         .border_left("")
         .border_right("")
+        .border_bottom("")
         .corner("")
-        .column_separator("  ");
+        .column_separator("│");
 
-    // Style header row (first row bodies) - bold with underline border
     if (table.size() > 0) {
+        // Style header row: bold
         table[0].format().font_style({tabulate::FontStyle::bold});
+
+        // Add separator below header using border_top on second row
+        if (table.size() > 1) {
+            table[1]
+                .format()
+                .border_top("─")
+                .corner_top_left("")
+                .corner_top_right("");
+        }
     }
+}
+
+void printStyledTable(tabulate::Table &table) {
+    styleTable(table);
+    std::cout << table << "\n";
 }

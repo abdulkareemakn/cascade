@@ -11,6 +11,19 @@
 #include "SQLiteCpp/Statement.h"
 #include "models.h"
 
+namespace {
+Task taskFromRow(SQLite::Statement &stmt) {
+    Task task;
+    task.id = stmt.getColumn(0).getInt();
+    task.title = stmt.getColumn(1).getString();
+    task.priority = stmt.getColumn(2).getInt();
+    task.status = stmt.getColumn(3).getInt();
+    task.dueDate = stmt.getColumn(4).getInt64();
+    task.creationTime = stmt.getColumn(5).getInt64();
+    return task;
+}
+}  // namespace
+
 void db::initDatabase() {
     SQLite::Database db(DATABASE_FILE,
                         SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE);
@@ -102,6 +115,7 @@ bool db::updateUsername(const std::string &oldUsername,
 
         update.bind(1, newUsername);
         update.bind(2, oldUsername);
+        update.exec();
 
     } catch (const std::exception &e) {
         std::println("{}\n", e.what());
@@ -141,14 +155,7 @@ std::optional<Task> db::getTask(int id) {
         select.bind(1, id);
 
         if (select.executeStep()) {
-            Task task;
-            task.id = select.getColumn(0).getInt();
-            task.title = select.getColumn(1).getString();
-            task.priority = select.getColumn(2).getInt();
-            task.status = select.getColumn(3).getInt();
-            task.dueDate = select.getColumn(4).getInt64();
-            task.creationTime = select.getColumn(5).getInt64();
-            return task;
+            return taskFromRow(select);
         }
         return std::nullopt;
     } catch (const std::exception &e) {
@@ -165,14 +172,7 @@ std::vector<Task> db::getTasksByUser() {
         SQLite::Statement select(db, "SELECT * FROM tasks");
 
         while (select.executeStep()) {
-            Task task;
-            task.id = select.getColumn(0).getInt();
-            task.title = select.getColumn(1).getString();
-            task.priority = select.getColumn(2).getInt();
-            task.status = select.getColumn(3).getInt();
-            task.dueDate = select.getColumn(4).getInt64();
-            task.creationTime = select.getColumn(5).getInt64();
-            tasks.emplace_back(task);
+            tasks.emplace_back(taskFromRow(select));
         }
     } catch (const std::exception &e) {
         std::println("{}\n", e.what());
@@ -189,14 +189,7 @@ std::vector<Task> db::getIncompleteTasksByUser() {
                                  "SELECT * FROM tasks WHERE status IN (0, 1)");
 
         while (select.executeStep()) {
-            Task task;
-            task.id = select.getColumn(0).getInt();
-            task.title = select.getColumn(1).getString();
-            task.priority = select.getColumn(2).getInt();
-            task.status = select.getColumn(3).getInt();
-            task.dueDate = select.getColumn(4).getInt64();
-            task.creationTime = select.getColumn(5).getInt64();
-            tasks.emplace_back(task);
+            tasks.emplace_back(taskFromRow(select));
         }
     } catch (const std::exception &e) {
         std::println("{}\n", e.what());
@@ -329,14 +322,7 @@ std::vector<Task> db::getTaskDependencies(int taskId) {
         select.bind(1, taskId);
 
         while (select.executeStep()) {
-            Task task;
-            task.id = select.getColumn(0).getInt();
-            task.title = select.getColumn(1).getString();
-            task.priority = select.getColumn(2).getInt();
-            task.status = select.getColumn(3).getInt();
-            task.dueDate = select.getColumn(4).getInt64();
-            task.creationTime = select.getColumn(5).getInt64();
-            dependencies.push_back(task);
+            dependencies.push_back(taskFromRow(select));
         }
     } catch (const std::exception &e) {
         std::println("{}\n", e.what());
@@ -357,14 +343,7 @@ std::vector<Task> db::getTaskDependents(int taskId) {
         select.bind(1, taskId);
 
         while (select.executeStep()) {
-            Task task;
-            task.id = select.getColumn(0).getInt();
-            task.title = select.getColumn(1).getString();
-            task.priority = select.getColumn(2).getInt();
-            task.status = select.getColumn(3).getInt();
-            task.dueDate = select.getColumn(4).getInt64();
-            task.creationTime = select.getColumn(5).getInt64();
-            dependents.push_back(task);
+            dependents.push_back(taskFromRow(select));
         }
     } catch (const std::exception &e) {
         std::println("{}\n", e.what());

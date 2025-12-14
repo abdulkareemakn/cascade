@@ -1,13 +1,15 @@
 #pragma once
 #include <ctime>
 #include <optional>
-#include <print>
 #include <string>
 
-#include "database.h"
 #include "models.h"
-#include "session.h"
 #include "tabulate.hpp"
+
+// Time constants (in seconds)
+constexpr int SECONDS_PER_DAY = 86400;
+constexpr int SECONDS_PER_WEEK = 604800;
+constexpr int SECONDS_PER_MONTH = 2592000;  // 30 days
 
 std::optional<TaskStatus> parseTaskStatus(const std::string &str);
 
@@ -20,3 +22,5 @@ std::string formatDate(std::time_t timestamp);
 std::string statusToString(int status);
 
 void styleTable(tabulate::Table &table);
+
+void printStyledTable(tabulate::Table &table);
