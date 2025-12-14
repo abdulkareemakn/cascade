@@ -22,7 +22,6 @@ set(CASCADE_SOURCES
     src/sorting.cpp
     src/TaskGraph.cpp
     src/repository.cpp
-    src/session.cpp
     src/util.cpp
 )
 

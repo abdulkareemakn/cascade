@@ -89,8 +89,7 @@ void getNextPriorityTask() {
     table.add_row(tabulate::RowStream{}
                   << task.id << task.title << task.priority
                   << statusToString(task.status) << formatDate(task.dueDate));
-    styleTable(table);
-    std::cout << table << "\n";
+    printStyledTable(table);
 }
 
 // ============================================================================
@@ -116,8 +115,7 @@ void showTask(int taskId) {
                                             << task.priority
                                             << statusToString(task.status)
                                             << formatDate(task.dueDate));
-        styleTable(table);
-        std::cout << table << "\n";
+        printStyledTable(table);
     }
 }
 
@@ -137,8 +135,7 @@ void showAllTasks() {
                                             << statusToString(task.status)
                                             << formatDate(task.dueDate));
     }
-    styleTable(table);
-    std::cout << table << "\n";
+    printStyledTable(table);
 }
 
 void listTasks(bool showAll, int filterStatus, int filterPriority,
@@ -189,9 +186,7 @@ void listTasks(bool showAll, int filterStatus, int filterPriority,
                                             << statusToString(task.status)
                                             << formatDate(task.dueDate));
     }
-    styleTable(table);
-    std::cout << table << "\n";
-    std::println("{} task(s)", tasks.size());
+    printStyledTable(table);
 }
 
 // ============================================================================
@@ -362,8 +357,7 @@ void showDependencies(int taskId) {
                              << dep.id << dep.title
                              << statusToString(dep.status));
         }
-        styleTable(depTable);
-        std::cout << depTable << "\n";
+        printStyledTable(depTable);
     }
 
     if (dependents.empty()) {
@@ -377,8 +371,7 @@ void showDependencies(int taskId) {
                               << dept.id << dept.title
                               << statusToString(dept.status));
         }
-        styleTable(deptTable);
-        std::cout << deptTable << "\n";
+        printStyledTable(deptTable);
     }
 }
 
@@ -416,8 +409,7 @@ void showExecutionPlan() {
                           << statusToString(task->status));
         }
     }
-    styleTable(table);
-    std::cout << table << "\n";
+    printStyledTable(table);
 }
 
 void showCriticalPath() {
@@ -454,8 +446,7 @@ void showCriticalPath() {
                           << task->priority << statusToString(task->status));
         }
     }
-    styleTable(table);
-    std::cout << table << "\n";
+    printStyledTable(table);
 
     std::println(
         "\nThis chain represents the minimum number of sequential steps");
