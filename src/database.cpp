@@ -118,7 +118,7 @@ bool db::createTask(const std::string &title, int priority, int status,
         SQLite::Statement insert(db,
                                  "INSERT INTO tasks (title, priority, status, "
                                  "dueDate, creationTime) VALUES (?, ?, "
-                                 "?, ?, unixepoch(), ?)");
+                                 "?, ?, unixepoch())");
 
         insert.bind(1, title);
         insert.bind(2, priority);
@@ -157,13 +157,12 @@ std::optional<Task> db::getTask(int id) {
     }
 }
 
-std::vector<Task> db::getTasksByUser(int userId) {
+std::vector<Task> db::getTasksByUser() {
     auto &db = db::getConnection();
     std::vector<Task> tasks;
 
     try {
-        SQLite::Statement select(db, "SELECT * FROM tasks WHERE ownerId = ?");
-        select.bind(1, userId);
+        SQLite::Statement select(db, "SELECT * FROM tasks");
 
         while (select.executeStep()) {
             Task task;
@@ -173,7 +172,7 @@ std::vector<Task> db::getTasksByUser(int userId) {
             task.status = select.getColumn(3).getInt();
             task.dueDate = select.getColumn(4).getInt64();
             task.creationTime = select.getColumn(5).getInt64();
-            tasks.push_back(task);
+            tasks.emplace_back(task);
         }
     } catch (const std::exception &e) {
         std::println("{}\n", e.what());
@@ -181,14 +180,13 @@ std::vector<Task> db::getTasksByUser(int userId) {
     return tasks;
 }
 
-std::vector<Task> db::getIncompleteTasksByUser(int userId) {
+std::vector<Task> db::getIncompleteTasksByUser() {
     auto &db = db::getConnection();
     std::vector<Task> tasks;
 
     try {
-        SQLite::Statement select(
-            db, "SELECT * FROM tasks WHERE ownerId = ? AND status != 2");
-        select.bind(1, userId);
+        SQLite::Statement select(db,
+                                 "SELECT * FROM tasks WHERE status IN (0, 1)");
 
         while (select.executeStep()) {
             Task task;
@@ -198,7 +196,7 @@ std::vector<Task> db::getIncompleteTasksByUser(int userId) {
             task.status = select.getColumn(3).getInt();
             task.dueDate = select.getColumn(4).getInt64();
             task.creationTime = select.getColumn(5).getInt64();
-            tasks.push_back(task);
+            tasks.emplace_back(task);
         }
     } catch (const std::exception &e) {
         std::println("{}\n", e.what());

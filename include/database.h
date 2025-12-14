@@ -29,8 +29,8 @@ bool updateUsername(const std::string &oldUsername,
 bool createTask(const std::string &title, int priority, int status,
                 std::time_t dueDate);
 std::optional<Task> getTask(int id);
-std::vector<Task> getTasksByUser(int userId);
-std::vector<Task> getIncompleteTasksByUser(int userID);
+std::vector<Task> getTasksByUser();
+std::vector<Task> getIncompleteTasksByUser();
 bool updateTaskStatus(int id, int status);
 bool updateTaskPriority(int id, int priority);
 bool updateTaskDueDate(int id, std::time_t dueDate);

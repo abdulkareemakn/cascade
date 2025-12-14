@@ -13,7 +13,7 @@ struct Task {
     int id = 0;
     std::string title;
     int priority = 2;
-    int status = 0;
+    int status = -1;
     std::time_t dueDate = 0;
     std::time_t creationTime = 0;
 };
