@@ -21,7 +21,7 @@ set(CASCADE_SOURCES
     src/PriorityQueue.cpp
     src/sorting.cpp
     src/TaskGraph.cpp
-    # src/repository.cpp
+    src/repository.cpp
     src/session.cpp
     src/util.cpp
 )

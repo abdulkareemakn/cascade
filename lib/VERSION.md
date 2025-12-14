@@ -4,14 +4,6 @@ This directory contains vendored (embedded) third-party libraries.
 
 ## Libraries
 
-### Argon2 (20190702)
-- **Source:** https://github.com/P-H-C/phc-winner-argon2
-- **Tag:** 20190702
-- **Commit:** 62358ba2123abd17fccf2a108a301d4b52c01a7c
-- **License:** CC0 1.0 Universal / Apache 2.0
-- **Purpose:** Password hashing for user authentication
-- **Note:** Custom CMakeLists.txt added for integration
-
 ### SQLiteCpp (3.3.3)
 - **Source:** https://github.com/SRombauts/SQLiteCpp
 - **Tag:** 3.3.3

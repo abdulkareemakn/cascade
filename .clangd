@@ -1,0 +1,9 @@
+CompileFlags:
+  CompilationDatabase: build/
+  Add:
+    - -xc++
+    - -std=c++23
+    - -I/home/abdulkareem/projects/cpp/cascade/include
+    - -I/home/abdulkareem/projects/cpp/cascade/lib/CLI11
+    - -I/home/abdulkareem/projects/cpp/cascade/lib/tabulate
+    - -I/home/abdulkareem/projects/cpp/cascade/lib/fmt/include
