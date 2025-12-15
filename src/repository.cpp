@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "PriorityQueue.h"
-#include "TaskGraph.h"
 #include "commands.h"
 #include "database.h"
 #include "models.h"
@@ -15,48 +14,6 @@
 #include "util.h"
 
 namespace repo {
-core::TaskGraph buildTaskGraph() {
-    core::TaskGraph graph;
-
-    std::vector<Task> tasks = db::getTasksByUser();
-    for (const auto &task : tasks) {
-        graph.addTask(task);
-    }
-
-    for (const auto &task : tasks) {
-        auto dependencies = db::getTaskDependencies(task.id);
-        for (const auto &dep : dependencies) {
-            graph.addDependency(task.id, dep.id);
-        }
-    }
-
-    return graph;
-}
-
-bool addTaskDependencyWithValidation(int taskId, int dependsOnId) {
-    auto task = db::getTask(taskId);
-    if (!task) {
-        return false;
-    }
-    auto graph = buildTaskGraph();
-    bool canAdd = graph.addDependency(taskId, dependsOnId);
-    if (!canAdd) {
-        return false;
-    }
-    return db::addTaskDependency(taskId, dependsOnId);
-}
-
-std::vector<int> getTaskExecutionOrder() {
-    auto graph = buildTaskGraph();
-    std::vector<int> order = graph.topologicalSort();
-    return order;
-}
-
-core::CriticalPathResult getProjectCriticalPath() {
-    auto graph = buildTaskGraph();
-    return graph.criticalPath();
-}
-
 core::Queue loadUserTaskQueue() {
     core::Queue queue;
     auto tasks = db::getIncompleteTasksByUser();
@@ -284,10 +241,7 @@ void addDependency(int taskId, int dependsOnId) {
         return;
     }
 
-    auto graph = buildTaskGraph();
-    graph.addDependency(taskId, dependsOnId);
-
-    if (graph.detectCycle().hasCycle) {
+    if (db::wouldCreateCycle(taskId, dependsOnId)) {
         std::println(
             "Cannot add dependency: would create a circular dependency.");
         return;
@@ -359,17 +313,7 @@ void showDependencies(int taskId) {
 }
 
 void showExecutionPlan() {
-    auto graph = buildTaskGraph();
-
-    if (graph.detectCycle().hasCycle) {
-        std::println(
-            "Error: Circular dependency detected. Cannot generate execution "
-            "plan.");
-        std::println("Use 'deps show <id>' to investigate task dependencies.");
-        return;
-    }
-
-    auto order = graph.topologicalSort();
+    auto order = db::getTopologicalOrder();
 
     if (order.empty()) {
         std::println("No tasks to plan.");
@@ -396,32 +340,22 @@ void showExecutionPlan() {
 }
 
 void showCriticalPath() {
-    auto graph = buildTaskGraph();
+    auto path = db::getCriticalPath();
 
-    if (graph.detectCycle().hasCycle) {
-        std::println(
-            "Error: Circular dependency detected. Cannot analyze critical "
-            "path.");
-        std::println("Use 'deps show <id>' to investigate task dependencies.");
-        return;
-    }
-
-    auto result = graph.criticalPath();
-
-    if (result.path.empty()) {
+    if (path.empty()) {
         std::println("No critical path found (no dependencies between tasks).");
         return;
     }
 
     std::println("Critical Path Analysis");
     std::println("======================");
-    std::println("The longest dependency chain has {} tasks:\n", result.length);
+    std::println("The longest dependency chain has {} tasks:\n", path.size());
 
     tabulate::Table table;
     table.add_row({"Order", "ID", "Title", "Priority", "Status"});
 
     int order = 1;
-    for (int taskId : result.path) {
+    for (int taskId : path) {
         auto task = db::getTask(taskId);
         if (task.has_value()) {
             table.add_row(tabulate::RowStream{}

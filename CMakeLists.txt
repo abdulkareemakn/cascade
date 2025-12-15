@@ -20,7 +20,6 @@ set(CASCADE_SOURCES
     src/database.cpp
     src/PriorityQueue.cpp
     src/sorting.cpp
-    src/TaskGraph.cpp
     src/repository.cpp
     src/util.cpp
 )

@@ -350,3 +350,191 @@ std::vector<Task> db::getTaskDependents(int taskId) {
     }
     return dependents;
 }
+
+bool db::wouldCreateCycle(int taskId, int dependsOnTaskId) {
+    auto &db = db::getConnection();
+
+    try {
+        // Check if dependsOnTaskId can reach taskId through dependencies
+        // Using recursive CTE to traverse the dependency chain
+        SQLite::Statement query(
+            db,
+            "WITH RECURSIVE dep_chain(id) AS ("
+            "  SELECT ? "
+            "  UNION ALL "
+            "  SELECT td.dependsOnTaskId "
+            "  FROM task_dependencies td "
+            "  JOIN dep_chain dc ON td.taskId = dc.id"
+            ") "
+            "SELECT 1 FROM dep_chain WHERE id = ? LIMIT 1");
+
+        query.bind(1, dependsOnTaskId);
+        query.bind(2, taskId);
+
+        return query.executeStep();
+    } catch (const std::exception &e) {
+        std::println("{}\n", e.what());
+        return true;  // Assume cycle on error to be safe
+    }
+}
+
+std::vector<int> db::getTopologicalOrder() {
+    auto &db = db::getConnection();
+    std::vector<int> order;
+
+    try {
+        // Get all task IDs first
+        std::vector<int> allTasks;
+        SQLite::Statement getAllTasks(db, "SELECT id FROM tasks");
+        while (getAllTasks.executeStep()) {
+            allTasks.push_back(getAllTasks.getColumn(0).getInt());
+        }
+
+        std::vector<int> processed;
+
+        // Iteratively find tasks with no unprocessed dependencies
+        while (processed.size() < allTasks.size()) {
+            bool foundTask = false;
+
+            for (int taskId : allTasks) {
+                // Skip if already processed
+                bool alreadyProcessed = false;
+                for (int p : processed) {
+                    if (p == taskId) {
+                        alreadyProcessed = true;
+                        break;
+                    }
+                }
+                if (alreadyProcessed) continue;
+
+                // Check if all dependencies are processed
+                bool allDepsProcessed = true;
+                SQLite::Statement getDeps(
+                    db,
+                    "SELECT dependsOnTaskId FROM task_dependencies WHERE "
+                    "taskId = ?");
+                getDeps.bind(1, taskId);
+
+                while (getDeps.executeStep()) {
+                    int depId = getDeps.getColumn(0).getInt();
+                    bool depProcessed = false;
+                    for (int p : processed) {
+                        if (p == depId) {
+                            depProcessed = true;
+                            break;
+                        }
+                    }
+                    if (!depProcessed) {
+                        allDepsProcessed = false;
+                        break;
+                    }
+                }
+
+                if (allDepsProcessed) {
+                    order.push_back(taskId);
+                    processed.push_back(taskId);
+                    foundTask = true;
+                    break;
+                }
+            }
+
+            // If no task found, there's a cycle
+            if (!foundTask && processed.size() < allTasks.size()) {
+                std::println("Cycle detected - cannot create topological order");
+                return {};
+            }
+        }
+    } catch (const std::exception &e) {
+        std::println("{}\n", e.what());
+        return {};
+    }
+
+    return order;
+}
+
+std::vector<int> db::getCriticalPath() {
+    auto &db = db::getConnection();
+    std::vector<int> path;
+
+    try {
+        // Find tasks with no dependents (leaf tasks)
+        std::vector<int> leafTasks;
+        SQLite::Statement findLeaves(
+            db,
+            "SELECT id FROM tasks WHERE id NOT IN "
+            "(SELECT DISTINCT dependsOnTaskId FROM task_dependencies)");
+
+        while (findLeaves.executeStep()) {
+            leafTasks.push_back(findLeaves.getColumn(0).getInt());
+        }
+
+        if (leafTasks.empty()) {
+            return path;
+        }
+
+        // For each leaf, calculate depth recursively
+        int maxDepth = 0;
+        int criticalLeaf = -1;
+
+        for (int leafId : leafTasks) {
+            int depth = 0;
+            std::vector<int> currentPath;
+            std::vector<int> visited;
+
+            // Calculate depth by following dependencies backward
+            int currentId = leafId;
+            currentPath.push_back(currentId);
+
+            while (true) {
+                // Find the dependency with maximum depth
+                SQLite::Statement getDeps(
+                    db,
+                    "SELECT dependsOnTaskId FROM task_dependencies WHERE "
+                    "taskId = ?");
+                getDeps.bind(1, currentId);
+
+                int maxDepthDep = -1;
+                int nextId = -1;
+
+                while (getDeps.executeStep()) {
+                    int depId = getDeps.getColumn(0).getInt();
+
+                    // Avoid cycles in visited
+                    bool alreadyVisited = false;
+                    for (int v : visited) {
+                        if (v == depId) {
+                            alreadyVisited = true;
+                            break;
+                        }
+                    }
+                    if (!alreadyVisited) {
+                        // For simplicity, just pick first unvisited dependency
+                        nextId = depId;
+                        break;
+                    }
+                }
+
+                if (nextId == -1) {
+                    // No more dependencies
+                    break;
+                }
+
+                visited.push_back(currentId);
+                currentId = nextId;
+                currentPath.push_back(currentId);
+                depth++;
+            }
+
+            if (depth > maxDepth) {
+                maxDepth = depth;
+                criticalLeaf = leafId;
+                path = currentPath;
+            }
+        }
+    } catch (const std::exception &e) {
+        std::println("{}\n", e.what());
+        return {};
+    }
+
+    return path;
+}

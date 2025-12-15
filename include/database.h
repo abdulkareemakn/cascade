@@ -39,4 +39,8 @@ bool removeTaskDependency(int taskId, int dependsOnTaskId);
 std::vector<Task> getTaskDependencies(int taskId);
 std::vector<Task> getTaskDependents(int taskId);
 
+bool wouldCreateCycle(int taskId, int dependsOnTaskId);
+std::vector<int> getTopologicalOrder();
+std::vector<int> getCriticalPath();
+
 }  // namespace db

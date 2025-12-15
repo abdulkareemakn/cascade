@@ -5,18 +5,12 @@
 #include <vector>
 
 #include "PriorityQueue.h"
-#include "TaskGraph.h"
 #include "commands.h"
 #include "models.h"
 #include "sorting.h"
 
 
 namespace repo {
-core::TaskGraph buildTaskGraph();
-bool addTaskDependencyWithValidation(int taskId, int dependsOnId);
-std::vector<int> getTaskExecutionOrder();
-core::CriticalPathResult getProjectCriticalPath();
-
 core::Queue loadUserTaskQueue();
 void getNextPriorityTask();
 
