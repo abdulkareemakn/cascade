@@ -23,8 +23,3 @@ enum class TaskStatus : int {
     COMPLETE = 2,
     WONT_DO = 3
 };
-
-struct TaskDependency {
-    int taskId;
-    int dependsOnTaskId;
-};

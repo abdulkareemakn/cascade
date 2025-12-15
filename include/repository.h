@@ -28,9 +28,4 @@ void updateTaskDueDate(int taskId, std::time_t dueDate);
 void updateTaskTitle(int taskId, const std::string &title);
 void deleteTask(int taskId);
 
-void addDependency(int taskId, int dependsOnId);
-void removeDependency(int taskId, int dependsOnId);
-void showDependencies(int taskId);
-void showExecutionPlan();
-void showCriticalPath();
 }  // namespace repo

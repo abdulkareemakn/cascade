@@ -6,7 +6,6 @@
 
 #include "CLI11.hpp"
 #include "PriorityQueue.h"
-#include "TaskGraph.h"
 #include "commands.h"
 #include "database.h"
 #include "models.h"
@@ -20,9 +19,7 @@ constexpr const char *VERSION = "1.0.0";
 int main(int argc, char **argv) {
     CLI::App app{
         "Cascade - A Personal Task Manager\n"
-        "Manage tasks with dependencies, priorities, and deadlines.\n"
-        "Uses graph algorithms for dependency analysis and heap for "
-        "prioritization.",
+        "Manage tasks with priorities and deadlines.",
         "cascade"};
     app.require_subcommand(0, 1);
     app.set_version_flag("-v,--version", VERSION);
@@ -177,7 +174,6 @@ int main(int argc, char **argv) {
     auto *task_delete = task->add_subcommand(
         "delete",
         "Permanently delete a task\n"
-        "Warning: This also removes all dependencies involving this task.\n"
     );
 
     task_delete->add_option("id", args.task.taskId, "Task ID to delete")
@@ -213,84 +209,6 @@ int main(int argc, char **argv) {
         repo::updateTaskStatus(args.task.taskId,
                                static_cast<int>(TaskStatus::IN_PROGRESS));
     });
-
-
-    auto *deps = app.add_subcommand(
-        "deps",
-        "Task dependency management\n"
-        "Manage dependencies between tasks using graph algorithms.\n"
-        "Supports cycle detection, topological sorting, and critical path "
-        "analysis.");
-
-    auto *deps_add = deps->add_subcommand(
-        "add",
-        "Add a dependency between two tasks\n"
-        "The first task will depend on the second task.\n"
-        "Automatically prevents circular dependencies using cycle detection.\n"
-        "Example: cascade deps add 5 3  # Task 5 depends on Task 3");
-
-    deps_add
-        ->add_option("task-id", args.deps.taskId,
-                     "ID of the task that will have the dependency")
-        ->required();
-    deps_add
-        ->add_option("depends-on-id", args.deps.dependsOnId,
-                     "ID of the task it depends on")
-        ->required();
-
-    deps_add->callback([&args]() {
-        repo::addDependency(args.deps.taskId, args.deps.dependsOnId);
-    });
-
-    auto *deps_remove =
-        deps->add_subcommand("remove",
-                             "Remove a dependency between two tasks\n"
-                             "Example: cascade deps remove 5 3  # Task 5 no "
-                             "longer depends on Task 3");
-
-    deps_remove
-        ->add_option("task-id", args.deps.taskId,
-                     "ID of the task to remove dependency from")
-        ->required();
-    deps_remove
-        ->add_option("depends-on-id", args.deps.dependsOnId,
-                     "ID of the task it currently depends on")
-        ->required();
-
-    deps_remove->callback([&args]() {
-        repo::removeDependency(args.deps.taskId, args.deps.dependsOnId);
-    });
-
-    auto *deps_show = deps->add_subcommand(
-        "show",
-        "Show all dependencies for a specific task\n"
-        "Displays both:\n"
-        "  - Dependencies: tasks this task depends on (must complete first)\n"
-        "  - Dependents: tasks that depend on this task (blocked by this)\n"
-        "Example: cascade deps show 5");
-
-    deps_show->add_option("task-id", args.deps.taskId, "Task ID to inspect")
-        ->required();
-
-    deps_show->callback(
-        [&args]() { repo::showDependencies(args.deps.taskId); });
-
-    auto *deps_plan = deps->add_subcommand(
-        "plan",
-        "Generate an execution plan for all tasks using topological sort\n"
-        "Shows the order to complete tasks while respecting all dependencies.\n"
-        "Will detect and report if circular dependencies exist.");
-
-    deps_plan->callback([]() { repo::showExecutionPlan(); });
-
-    auto *deps_critical = deps->add_subcommand(
-        "critical",
-        "Analyze and display the critical path\n"
-        "The critical path is the longest chain of dependent tasks.\n"
-        "This represents the minimum sequential work required.\n"
-    );
-
-    deps_critical->callback([]() { repo::showCriticalPath(); });
 
     CLI11_PARSE(app, argc, argv);
 

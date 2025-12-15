@@ -23,13 +23,7 @@ struct TaskArgs {
     std::string updateTitle;
 };
 
-struct DepsArgs {
-    int taskId = 0;
-    int dependsOnId = 0;
-};
-
 struct CommandArgs {
     UserArgs user;
     TaskArgs task;
-    DepsArgs deps;
 };

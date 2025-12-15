@@ -34,13 +34,4 @@ bool updateTaskDueDate(int id, std::time_t dueDate);
 bool updateTaskTitle(int id, const std::string &title);
 bool deleteTask(int id);
 
-bool addTaskDependency(int taskId, int dependsOnTaskId);
-bool removeTaskDependency(int taskId, int dependsOnTaskId);
-std::vector<Task> getTaskDependencies(int taskId);
-std::vector<Task> getTaskDependents(int taskId);
-
-bool wouldCreateCycle(int taskId, int dependsOnTaskId);
-std::vector<int> getTopologicalOrder();
-std::vector<int> getCriticalPath();
-
 }  // namespace db
