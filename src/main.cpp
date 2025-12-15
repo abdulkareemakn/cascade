@@ -76,10 +76,10 @@ int main(int argc, char **argv) {
                          "Priority level (1=highest, 4=lowest). Default: 2");
     task_add->add_option(
         "-s,--status", args.task.status,
-        "Initial status: todo, in_progress, complete, wont_do. Default: todo");
+        "Initial status: todo | in_progress | complete | wont_do. Default: todo");
     task_add->add_option(
         "--due", args.task.dueDate,
-        "Due date: YYYY-MM-DD or today, tomorrow, next-week, next-month");
+        "Due date: YYYY-MM-DD");
 
     task_add->callback([&args]() {
         db::createTask(args.task.title, args.task.priority,
@@ -92,12 +92,7 @@ int main(int argc, char **argv) {
         "list",
         "List tasks with optional filters and sorting\n"
         "By default, shows only incomplete tasks (TODO, IN_PROGRESS).\n"
-        "Examples:\n"
-        "  cascade task list                    # Incomplete tasks\n"
-        "  cascade task list --all              # All tasks including "
-        "completed\n"
-        "  cascade task list --status 0         # Only TODO tasks\n"
-        "  cascade task list --sort priority    # Sort by priority");
+    );
 
     task_list->add_flag("--all", args.task.showAll,
                         "Include completed and cancelled tasks");
@@ -118,7 +113,7 @@ int main(int argc, char **argv) {
     auto *task_show =
         task->add_subcommand("show",
                              "Show detailed information about a specific task\n"
-                             "Example: cascade task show 5");
+        );
 
     task_show->add_option("id", args.task.taskId, "Task ID to display")
         ->required();
@@ -137,21 +132,17 @@ int main(int argc, char **argv) {
     auto *task_update = task->add_subcommand(
         "update",
         "Update properties of an existing task\n"
-        "Examples:\n"
-        "  cascade task update 5 --priority 1\n"
-        "  cascade task update 3 --status complete\n"
-        "  cascade task update 2 --due tomorrow --priority 1\n"
-        "  cascade task update 1 --title \"New task name\"");
+    );
 
     task_update->add_option("id", args.task.taskId, "Task ID to update")
         ->required();
     task_update->add_option("--priority", args.task.updatePriority,
                             "New priority level (1-4)");
     task_update->add_option("--status", args.task.updateStatus,
-                            "New status: todo, in_progress, complete, wont_do");
+                            "New status: todo | in_progress | complete | wont_do");
     task_update->add_option(
         "--due", args.task.updateDueDate,
-        "New due date: YYYY-MM-DD or today, tomorrow, next-week, next-month");
+        "New due date: YYYY-MM-DD");
     task_update->add_option("--title", args.task.updateTitle, "New title");
 
     task_update->callback([&args]() {
@@ -187,7 +178,7 @@ int main(int argc, char **argv) {
         "delete",
         "Permanently delete a task\n"
         "Warning: This also removes all dependencies involving this task.\n"
-        "Example: cascade task delete 5");
+    );
 
     task_delete->add_option("id", args.task.taskId, "Task ID to delete")
         ->required();
@@ -198,7 +189,7 @@ int main(int argc, char **argv) {
     auto *task_done = task->add_subcommand(
         "done",
         "Mark a task as complete (shortcut for update --status complete)\n"
-        "Example: cascade task done 5");
+    );
 
     task_done->add_option("id", args.task.taskId, "Task ID to mark as done")
         ->required();
@@ -213,7 +204,7 @@ int main(int argc, char **argv) {
         task->add_subcommand("start",
                              "Mark a task as in progress (shortcut for update "
                              "--status in_progress)\n"
-                             "Example: cascade task start 5");
+        );
 
     task_start->add_option("id", args.task.taskId, "Task ID to start")
         ->required();
@@ -288,8 +279,6 @@ int main(int argc, char **argv) {
         "plan",
         "Generate an execution plan for all tasks using topological sort\n"
         "Shows the order to complete tasks while respecting all dependencies.\n"
-        "Uses Kahn's algorithm (BFS-based topological sort) - O(V+E) "
-        "complexity.\n"
         "Will detect and report if circular dependencies exist.");
 
     deps_plan->callback([]() { repo::showExecutionPlan(); });
@@ -299,7 +288,7 @@ int main(int argc, char **argv) {
         "Analyze and display the critical path\n"
         "The critical path is the longest chain of dependent tasks.\n"
         "This represents the minimum sequential work required.\n"
-        "Uses dynamic programming on the DAG - O(V+E) complexity.");
+    );
 
     deps_critical->callback([]() { repo::showCriticalPath(); });
 
