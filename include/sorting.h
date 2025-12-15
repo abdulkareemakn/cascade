@@ -9,9 +9,6 @@ namespace core {
 void mergeSort(std::vector<Task>& tasks,
                bool (*comparator)(const Task&, const Task&));
 
-void quickSort(std::vector<Task>& tasks,
-               bool (*comparator)(const Task&, const Task&));
-
 inline bool byPriority(const Task& a, const Task& b) {
     return a.priority < b.priority;
 }

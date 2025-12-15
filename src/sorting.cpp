@@ -57,49 +57,4 @@ void mergeSort(std::vector<Task>& tasks,
                     temp);
 }
 
-
-static int partition(std::vector<Task>& tasks, int low, int high,
-                     bool (*comparator)(const Task&, const Task&)) {
-    int mid = low + (high - low) / 2;
-    Task pivot = tasks[mid];
-
-    int i = low - 1;
-    int j = high + 1;
-
-    while (true) {
-        do {
-            i++;
-        } while (comparator(tasks[i], pivot));
-
-        do {
-            j--;
-        } while (comparator(pivot, tasks[j]));
-
-        if (i >= j) {
-            return j;
-        }
-
-        std::swap(tasks[i], tasks[j]);
-    }
-}
-
-static void quickSortHelper(std::vector<Task>& tasks, int low, int high,
-                            bool (*comparator)(const Task&, const Task&)) {
-    if (low < high) {
-        int pi = partition(tasks, low, high, comparator);
-
-        quickSortHelper(tasks, low, pi, comparator);
-        quickSortHelper(tasks, pi + 1, high, comparator);
-    }
-}
-
-void quickSort(std::vector<Task>& tasks,
-               bool (*comparator)(const Task&, const Task&)) {
-    if (tasks.size() <= 1) {
-        return;
-    }
-
-    quickSortHelper(tasks, 0, static_cast<int>(tasks.size()) - 1, comparator);
-}
-
 }  // namespace core
