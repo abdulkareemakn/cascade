@@ -17,7 +17,6 @@ void TaskGraph::addTask(const Task& task) {
 }
 
 void TaskGraph::removeTask(int taskId) {
-    // Remove all dependencies involving this task
     for (auto& [id, deps] : adjacencyList_) {
         deps.erase(taskId);
     }
@@ -30,9 +29,6 @@ void TaskGraph::removeTask(int taskId) {
     tasks_.erase(taskId);
 }
 
-// ============================================================================
-// Edge Management
-// ============================================================================
 
 bool TaskGraph::addDependency(int taskId, int dependsOnId) {
     // Ensure both tasks exist
@@ -59,9 +55,6 @@ void TaskGraph::removeDependency(int taskId, int dependsOnId) {
     }
 }
 
-// ============================================================================
-// Query Methods
-// ============================================================================
 
 bool TaskGraph::hasTask(int taskId) const {
     return adjacencyList_.find(taskId) != adjacencyList_.end();
@@ -112,14 +105,10 @@ int TaskGraph::getDependencyCount() const {
     return count;
 }
 
-// ============================================================================
-// FR-TD-05: Cycle Detection using DFS with 3-color marking
-// ============================================================================
 
 CycleResult TaskGraph::detectCycle() const {
     std::unordered_map<int, Color> colors;
 
-    // Initialize all nodes as WHITE (unvisited)
     for (const auto& [taskId, _] : adjacencyList_) {
         colors[taskId] = Color::WHITE;
     }
@@ -127,7 +116,6 @@ CycleResult TaskGraph::detectCycle() const {
     std::vector<int> path;
     std::vector<int> cyclePath;
 
-    // Run DFS from each unvisited node
     for (const auto& [taskId, _] : adjacencyList_) {
         if (colors[taskId] == Color::WHITE) {
             if (dfsDetectCycle(taskId, colors, path, cyclePath)) {
@@ -169,28 +157,19 @@ bool TaskGraph::dfsDetectCycle(int taskId,
                     return true;
                 }
             }
-            // If BLACK, already fully processed - skip
         }
     }
 
-    colors[taskId] = Color::BLACK;  // Mark as fully processed
+    colors[taskId] = Color::BLACK; 
     path.pop_back();
     return false;
 }
 
 bool TaskGraph::wouldCreateCycle(int taskId, int dependsOnId) const {
-    // Adding edge: taskId -> dependsOnId (taskId depends on dependsOnId)
-    // This creates a cycle if there's already a path from taskId to dependsOnId
-    // following existing dependency edges (i.e., dependsOnId already depends on
-    // taskId directly or transitively)
-
     if (taskId == dependsOnId) {
         return true;  // Self-loop
     }
 
-    // BFS from dependsOnId following its dependencies to see if we reach taskId
-    // If dependsOnId (transitively) depends on taskId, adding
-    // taskId->dependsOnId creates cycle
     std::unordered_set<int> visited;
     std::queue<int> queue;
     queue.push(dependsOnId);
@@ -222,9 +201,6 @@ bool TaskGraph::wouldCreateCycle(int taskId, int dependsOnId) const {
     return false;
 }
 
-// ============================================================================
-// FR-TD-08, DSA-11: Topological Sort using Kahn's Algorithm
-// ============================================================================
 
 std::vector<int> TaskGraph::topologicalSort() const {
     if (adjacencyList_.empty()) {
@@ -277,9 +253,6 @@ std::vector<int> TaskGraph::topologicalSort() const {
     return sorted;
 }
 
-// ============================================================================
-// FR-TD-15: Critical Path Analysis
-// ============================================================================
 
 CriticalPathResult TaskGraph::criticalPath() const {
     if (adjacencyList_.empty()) {
@@ -359,9 +332,6 @@ int TaskGraph::dfsLongestPath(int taskId, std::unordered_map<int, int>& memo,
     return maxLength;
 }
 
-// ============================================================================
-// Utility Methods
-// ============================================================================
 
 void TaskGraph::loadFromDependencies(
     const std::vector<TaskDependency>& dependencies) {

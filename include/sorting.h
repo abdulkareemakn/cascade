@@ -6,14 +6,12 @@
 
 namespace core {
 
-// Sorting Algorithms
 void mergeSort(std::vector<Task>& tasks,
                bool (*comparator)(const Task&, const Task&));
 
 void quickSort(std::vector<Task>& tasks,
                bool (*comparator)(const Task&, const Task&));
 
-// Comparator Functions (return true if 'a' comes before 'b')
 inline bool byPriority(const Task& a, const Task& b) {
     return a.priority < b.priority;
 }

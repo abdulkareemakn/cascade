@@ -6,10 +6,9 @@
 #include "models.h"
 #include "tabulate.hpp"
 
-// Time constants (in seconds)
 constexpr int SECONDS_PER_DAY = 86400;
 constexpr int SECONDS_PER_WEEK = 604800;
-constexpr int SECONDS_PER_MONTH = 2592000;  // 30 days
+constexpr int SECONDS_PER_MONTH = 2592000; 
 
 std::optional<TaskStatus> parseTaskStatus(const std::string &str);
 

@@ -15,9 +15,6 @@
 #include "util.h"
 
 namespace repo {
-// ============================================================================
-// Graph Operations (DSA + DB)
-// ============================================================================
 core::TaskGraph buildTaskGraph() {
     core::TaskGraph graph;
 
@@ -60,9 +57,6 @@ core::CriticalPathResult getProjectCriticalPath() {
     return graph.criticalPath();
 }
 
-// ============================================================================
-// Priority Queue Operations (DSA + DB)
-// ============================================================================
 core::Queue loadUserTaskQueue() {
     core::Queue queue;
     auto tasks = db::getIncompleteTasksByUser();
@@ -92,9 +86,6 @@ void getNextPriorityTask() {
     printStyledTable(table);
 }
 
-// ============================================================================
-// Sorting Operations (DSA + DB)
-// ============================================================================
 std::vector<Task> getSortedTasks(bool (*comparator)(const Task &,
                                                     const Task &)) {
     auto tasks = db::getTasksByUser();
@@ -163,7 +154,6 @@ void listTasks(bool showAll, int filterStatus, int filterPriority,
         });
     }
 
-    // Sort tasks
     if (sortBy == "priority") {
         core::mergeSort(tasks, core::byPriority);
     } else if (sortBy == "date") {
@@ -189,9 +179,6 @@ void listTasks(bool showAll, int filterStatus, int filterPriority,
     printStyledTable(table);
 }
 
-// ============================================================================
-// Update Operations
-// ============================================================================
 void updateTaskPriority(int taskId, int priority) {
     auto task = db::getTask(taskId);
     if (!task.has_value()) {
@@ -279,9 +266,6 @@ void deleteTask(int taskId) {
     }
 }
 
-// ============================================================================
-// Dependency Operations (Graph DSA)
-// ============================================================================
 void addDependency(int taskId, int dependsOnId) {
     auto task = db::getTask(taskId);
     if (!task.has_value()) {
@@ -300,7 +284,6 @@ void addDependency(int taskId, int dependsOnId) {
         return;
     }
 
-    // Build graph and check for cycles
     auto graph = buildTaskGraph();
     graph.addDependency(taskId, dependsOnId);
 

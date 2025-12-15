@@ -79,8 +79,6 @@ std::string statusToString(int status) {
 }
 
 void styleTable(tabulate::Table &table) {
-    // Option 7: Header-only border style
-    // Configure table-level format
     table.format()
         .border_top("")
         .border_left("")

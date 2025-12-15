@@ -51,24 +51,17 @@ int main(int argc, char **argv) {
 
     User user = db::getUser();
 
-    // =========================================================================
-    // whoami - Display current user information
-    // =========================================================================
+
     auto *whoami =
         app.add_subcommand("whoami", "Display current user information");
     whoami->callback(
         [&user]() { std::println("Username: {}", user.username); });
 
-    // =========================================================================
-    // task - Task management commands
-    // =========================================================================
+
     auto *task = app.add_subcommand("task",
                                     "Task management commands\n"
                                     "Create, view, update, and delete tasks.");
 
-    // -------------------------------------------------------------------------
-    // task add - Create a new task
-    // -------------------------------------------------------------------------
     auto *task_add = task->add_subcommand(
         "add",
         "Create a new task\n"
@@ -95,9 +88,6 @@ int main(int argc, char **argv) {
         std::println("Created task: {}", args.task.title);
     });
 
-    // -------------------------------------------------------------------------
-    // task list - List tasks with optional filters and sorting
-    // -------------------------------------------------------------------------
     auto *task_list = task->add_subcommand(
         "list",
         "List tasks with optional filters and sorting\n"
@@ -124,9 +114,7 @@ int main(int argc, char **argv) {
                         args.task.filterPriority, args.task.sortBy);
     });
 
-    // -------------------------------------------------------------------------
-    // task show - Show detailed view of a task
-    // -------------------------------------------------------------------------
+
     auto *task_show =
         task->add_subcommand("show",
                              "Show detailed information about a specific task\n"
@@ -137,21 +125,15 @@ int main(int argc, char **argv) {
 
     task_show->callback([&args]() { repo::showTask(args.task.taskId); });
 
-    // -------------------------------------------------------------------------
-    // task next - Get highest priority task (uses MinHeap)
-    // -------------------------------------------------------------------------
+
     auto *task_next = task->add_subcommand(
         "next",
         "Get the next task to work on based on priority and due date\n"
-        "Uses a MinHeap to efficiently find the highest priority incomplete "
-        "task.\n"
         "Priority is determined by: (1) priority level, (2) due date");
 
     task_next->callback([]() { repo::getNextPriorityTask(); });
 
-    // -------------------------------------------------------------------------
-    // task update - Update task properties
-    // -------------------------------------------------------------------------
+
     auto *task_update = task->add_subcommand(
         "update",
         "Update properties of an existing task\n"
@@ -200,9 +182,7 @@ int main(int argc, char **argv) {
         }
     });
 
-    // -------------------------------------------------------------------------
-    // task delete - Delete a task
-    // -------------------------------------------------------------------------
+
     auto *task_delete = task->add_subcommand(
         "delete",
         "Permanently delete a task\n"
@@ -214,9 +194,7 @@ int main(int argc, char **argv) {
 
     task_delete->callback([&args]() { repo::deleteTask(args.task.taskId); });
 
-    // -------------------------------------------------------------------------
-    // task done - Mark a task as complete (shortcut)
-    // -------------------------------------------------------------------------
+
     auto *task_done = task->add_subcommand(
         "done",
         "Mark a task as complete (shortcut for update --status complete)\n"
@@ -230,9 +208,7 @@ int main(int argc, char **argv) {
                                static_cast<int>(TaskStatus::COMPLETE));
     });
 
-    // -------------------------------------------------------------------------
-    // task start - Mark a task as in progress (shortcut)
-    // -------------------------------------------------------------------------
+
     auto *task_start =
         task->add_subcommand("start",
                              "Mark a task as in progress (shortcut for update "
@@ -247,9 +223,7 @@ int main(int argc, char **argv) {
                                static_cast<int>(TaskStatus::IN_PROGRESS));
     });
 
-    // =========================================================================
-    // deps - Dependency management commands (Graph algorithms)
-    // =========================================================================
+
     auto *deps = app.add_subcommand(
         "deps",
         "Task dependency management\n"
@@ -257,9 +231,6 @@ int main(int argc, char **argv) {
         "Supports cycle detection, topological sorting, and critical path "
         "analysis.");
 
-    // -------------------------------------------------------------------------
-    // deps add - Add a dependency between tasks
-    // -------------------------------------------------------------------------
     auto *deps_add = deps->add_subcommand(
         "add",
         "Add a dependency between two tasks\n"
@@ -280,9 +251,6 @@ int main(int argc, char **argv) {
         repo::addDependency(args.deps.taskId, args.deps.dependsOnId);
     });
 
-    // -------------------------------------------------------------------------
-    // deps remove - Remove a dependency
-    // -------------------------------------------------------------------------
     auto *deps_remove =
         deps->add_subcommand("remove",
                              "Remove a dependency between two tasks\n"
@@ -302,9 +270,6 @@ int main(int argc, char **argv) {
         repo::removeDependency(args.deps.taskId, args.deps.dependsOnId);
     });
 
-    // -------------------------------------------------------------------------
-    // deps show - Show dependencies for a task
-    // -------------------------------------------------------------------------
     auto *deps_show = deps->add_subcommand(
         "show",
         "Show all dependencies for a specific task\n"
@@ -319,9 +284,6 @@ int main(int argc, char **argv) {
     deps_show->callback(
         [&args]() { repo::showDependencies(args.deps.taskId); });
 
-    // -------------------------------------------------------------------------
-    // deps plan - Show execution order (Topological Sort)
-    // -------------------------------------------------------------------------
     auto *deps_plan = deps->add_subcommand(
         "plan",
         "Generate an execution plan for all tasks using topological sort\n"
@@ -332,9 +294,6 @@ int main(int argc, char **argv) {
 
     deps_plan->callback([]() { repo::showExecutionPlan(); });
 
-    // -------------------------------------------------------------------------
-    // deps critical - Show critical path analysis
-    // -------------------------------------------------------------------------
     auto *deps_critical = deps->add_subcommand(
         "critical",
         "Analyze and display the critical path\n"

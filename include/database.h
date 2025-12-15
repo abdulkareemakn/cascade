@@ -12,9 +12,7 @@ namespace db {
 void initDatabase();
 SQLite::Database &getConnection();
 
-// User CRUD
-//
-//
+
 bool hasUser();
 bool createUser(const std::string &username);
 User getUser();
@@ -25,7 +23,6 @@ bool updateUsername(const std::string &oldUsername,
 
 // TODO: Delete Database
 
-// Task CRUD
 bool createTask(const std::string &title, int priority, int status,
                 std::time_t dueDate);
 std::optional<Task> getTask(int id);
@@ -37,7 +34,6 @@ bool updateTaskDueDate(int id, std::time_t dueDate);
 bool updateTaskTitle(int id, const std::string &title);
 bool deleteTask(int id);
 
-// Task Dependencies
 bool addTaskDependency(int taskId, int dependsOnTaskId);
 bool removeTaskDependency(int taskId, int dependsOnTaskId);
 std::vector<Task> getTaskDependencies(int taskId);

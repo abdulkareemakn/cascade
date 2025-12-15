@@ -4,10 +4,6 @@
 
 namespace core {
 
-// ============================================================================
-// MERGE SORT
-// ============================================================================
-
 static void merge(std::vector<Task>& tasks, int left, int mid, int right,
                   bool (*comparator)(const Task&, const Task&),
                   std::vector<Task>& temp) {
@@ -16,7 +12,6 @@ static void merge(std::vector<Task>& tasks, int left, int mid, int right,
     int k = left;
 
     while (i <= mid && j <= right) {
-        // Pick from left when equal to maintain stability
         if (!comparator(tasks[j], tasks[i])) {
             temp[k++] = tasks[i++];
         } else {
@@ -62,9 +57,6 @@ void mergeSort(std::vector<Task>& tasks,
                     temp);
 }
 
-// ============================================================================
-// QUICK SORT
-// ============================================================================
 
 static int partition(std::vector<Task>& tasks, int low, int high,
                      bool (*comparator)(const Task&, const Task&)) {
