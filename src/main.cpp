@@ -89,14 +89,15 @@ int main(int argc, char **argv) {
         "list",
         "List tasks with optional filters and sorting\n"
         "By default, shows only incomplete tasks (TODO, IN_PROGRESS).\n"
+        "Note: --priority takes precedence over --status, which takes precedence over --sort.\n"
     );
 
     task_list->add_flag("--all", args.task.showAll,
                         "Include completed and cancelled tasks");
     task_list->add_flag("--status", args.task.sortByStatus,
-                        "Sort tasks by status");
+                        "Sort tasks by status (takes precedence over --sort)");
     task_list->add_flag("--priority", args.task.sortByPriority,
-                        "Sort tasks by priority level");
+                        "Sort tasks by priority level (takes precedence over --status and --sort)");
     task_list->add_option("--sort", args.task.sortBy,
                           "Sort by: priority, date (due date), or created");
 

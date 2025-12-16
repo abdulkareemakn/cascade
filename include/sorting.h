@@ -33,6 +33,7 @@ inline bool byDueDateThenPriority(const Task& a, const Task& b) {
 
 inline bool byId(const Task& a, const Task& b) { return a.id < b.id; }
 
+// Sort by status in ascending order: TODO (0) < IN_PROGRESS (1) < COMPLETE (2) < WONT_DO (3)
 inline bool byStatus(const Task& a, const Task& b) {
     return a.status < b.status;
 }
