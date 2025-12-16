@@ -15,9 +15,9 @@ struct TaskArgs {
     std::string sortBy;
     bool showAll = false;
     int taskId = 0;
-    int filterStatus = -1;    // -1 = no filter
-    int filterPriority = -1;  // -1 = no filter
-    int updatePriority = -1;  // -1 = not set
+    bool sortByStatus = false;    // Sort by status flag
+    bool sortByPriority = false;  // Sort by priority flag
+    int updatePriority = -1;      // -1 = not set
     std::string updateStatus;
     std::string updateDueDate;
     std::string updateTitle;

@@ -19,7 +19,7 @@ std::vector<Task> getSortedTasks(bool (*comparator)(const Task &,
 
 void showTask(int taskId);
 void showAllTasks();
-void listTasks(bool showAll, int filterStatus, int filterPriority,
+void listTasks(bool showAll, bool sortByStatus, bool sortByPriority,
                const std::string &sortBy);
 
 void updateTaskPriority(int taskId, int priority);
