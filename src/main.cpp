@@ -85,7 +85,6 @@ int main(int argc, char **argv) {
         std::println("Created task: {}", args.task.title);
     });
 
-    // TODO: When a user does task list show --priority or --status, the system should show all tasks in order of priority or status. It should not take an argument and then only show tasks of that priority.
     auto *task_list = task->add_subcommand(
         "list",
         "List tasks with optional filters and sorting\n"
@@ -94,17 +93,16 @@ int main(int argc, char **argv) {
 
     task_list->add_flag("--all", args.task.showAll,
                         "Include completed and cancelled tasks");
-    task_list->add_option(
-        "--status", args.task.filterStatus,
-        "Filter by status: 0=TODO, 1=IN_PROGRESS, 2=COMPLETE, 3=WONT_DO");
-    task_list->add_option("--priority", args.task.filterPriority,
-                          "Filter by priority level (1-4)");
+    task_list->add_flag("--status", args.task.sortByStatus,
+                        "Sort tasks by status");
+    task_list->add_flag("--priority", args.task.sortByPriority,
+                        "Sort tasks by priority level");
     task_list->add_option("--sort", args.task.sortBy,
                           "Sort by: priority, date (due date), or created");
 
     task_list->callback([&args]() {
-        repo::listTasks(args.task.showAll, args.task.filterStatus,
-                        args.task.filterPriority, args.task.sortBy);
+        repo::listTasks(args.task.showAll, args.task.sortByStatus,
+                        args.task.sortByPriority, args.task.sortBy);
     });
 
 

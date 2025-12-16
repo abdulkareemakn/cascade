@@ -33,4 +33,8 @@ inline bool byDueDateThenPriority(const Task& a, const Task& b) {
 
 inline bool byId(const Task& a, const Task& b) { return a.id < b.id; }
 
+inline bool byStatus(const Task& a, const Task& b) {
+    return a.status < b.status;
+}
+
 }  // namespace core
