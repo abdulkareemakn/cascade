@@ -85,6 +85,7 @@ int main(int argc, char **argv) {
         std::println("Created task: {}", args.task.title);
     });
 
+    // TODO: When a user does task list show --priority or --status, the system should show all tasks in order of priority or status. It should not take an argument and then only show tasks of that priority.
     auto *task_list = task->add_subcommand(
         "list",
         "List tasks with optional filters and sorting\n"
