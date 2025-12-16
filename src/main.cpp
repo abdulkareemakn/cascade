@@ -89,21 +89,21 @@ int main(int argc, char **argv) {
         "list",
         "List tasks with optional filters and sorting\n"
         "By default, shows only incomplete tasks (TODO, IN_PROGRESS).\n"
+        "Note: --priority takes precedence over --status, which takes precedence over --sort.\n"
     );
 
     task_list->add_flag("--all", args.task.showAll,
                         "Include completed and cancelled tasks");
-    task_list->add_option(
-        "--status", args.task.filterStatus,
-        "Filter by status: 0=TODO, 1=IN_PROGRESS, 2=COMPLETE, 3=WONT_DO");
-    task_list->add_option("--priority", args.task.filterPriority,
-                          "Filter by priority level (1-4)");
+    task_list->add_flag("--status", args.task.sortByStatus,
+                        "Sort tasks by status (takes precedence over --sort)");
+    task_list->add_flag("--priority", args.task.sortByPriority,
+                        "Sort tasks by priority level (takes precedence over --status and --sort)");
     task_list->add_option("--sort", args.task.sortBy,
                           "Sort by: priority, date (due date), or created");
 
     task_list->callback([&args]() {
-        repo::listTasks(args.task.showAll, args.task.filterStatus,
-                        args.task.filterPriority, args.task.sortBy);
+        repo::listTasks(args.task.showAll, args.task.sortByStatus,
+                        args.task.sortByPriority, args.task.sortBy);
     });
 
 

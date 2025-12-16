@@ -86,7 +86,7 @@ void showAllTasks() {
     printStyledTable(table);
 }
 
-void listTasks(bool showAll, int filterStatus, int filterPriority,
+void listTasks(bool showAll, bool sortByStatus, bool sortByPriority,
                const std::string &sortBy) {
     std::vector<Task> tasks;
 
@@ -97,21 +97,16 @@ void listTasks(bool showAll, int filterStatus, int filterPriority,
         tasks = db::getIncompleteTasksByUser();
     }
 
-    // Filter by status if specified (-1 means no filter)
-    if (filterStatus >= 0) {
-        std::erase_if(tasks, [filterStatus](const Task &t) {
-            return t.status != filterStatus;
-        });
+    // Sort by priority flag (takes precedence over --sort)
+    if (sortByPriority) {
+        core::mergeSort(tasks, core::byPriority);
     }
-
-    // Filter by priority if specified (-1 means no filter)
-    if (filterPriority >= 0) {
-        std::erase_if(tasks, [filterPriority](const Task &t) {
-            return t.priority != filterPriority;
-        });
+    // Sort by status flag (takes precedence over --sort)
+    else if (sortByStatus) {
+        core::mergeSort(tasks, core::byStatus);
     }
-
-    if (sortBy == "priority") {
+    // Sort by explicit --sort option
+    else if (sortBy == "priority") {
         core::mergeSort(tasks, core::byPriority);
     } else if (sortBy == "date") {
         core::mergeSort(tasks, core::byDueDate);
